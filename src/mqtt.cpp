@@ -1,6 +1,5 @@
 #include "mqtt.h"
 #include "credentials.h"
-// #include "timer.h"
 #include "delay.h"
 #include "signals.h"
 #include "control.h"
@@ -48,7 +47,6 @@ void mqtt_setup()
   mqttClient.setKeepAlive(1);
 }
 
-// for connecting to MQTT broker
 void reconnect()
 {
   String clientId = "ESP32Slave-";
@@ -82,7 +80,6 @@ void reconnect()
   mqttClient.publish(lastwilltopic, "{\"status\":\"Online\"}", true);
 }
 
-// mqtt_callback function is called when a message is received
 void mqtt_callback(char *topic, byte *payload, unsigned int length)
 {
 
@@ -90,9 +87,7 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length)
   Serial.print("Topic: ");
   Serial.print(topic);
   Serial.print("\n");
-
-  // String recv_payload = String((char*)payload);
-
+  
   String master_topic = "/status/master";
   String control_topic = "/traffic/control";
 
@@ -124,8 +119,6 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length)
       master_online = 1;
 
       //Wait for next master command
-      // signals_off();
-      // timer_update(0, 0);
     }
   }
   /*
@@ -201,9 +194,7 @@ void mqtt_log(String log_message)
   StaticJsonBuffer<capacity> jb;
   JsonObject &obj = jb.createObject();
   obj["species"]="slave";
-  // obj["species"]="master"; 
   obj["slave_id"]=SLAVE_ID;
-  // obj["panel_id"]=PANEL_ID;
   obj["log"]=log_message;
 
   // Serializing into payload

@@ -23,10 +23,10 @@
 #define SLAVE_STATE_RED 0
 #define SLAVE_STATE_GREEN 1
 
-typedef struct {
-    int n_slaves;
-    int states[7];
-} SlaveStates;
+// typedef struct {
+//     int n_slaves;
+//     int states[7];
+// } SlaveStates;
 
 // Mode select
 #define MODE_STRAIGHT_ONLY 1

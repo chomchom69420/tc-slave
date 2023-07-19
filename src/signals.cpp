@@ -49,10 +49,13 @@ struct environmentStruct
 
 } Traffic;
 
+static void setOppositeSlaveID();
+
 void initEnvironment()
 {
     // Set n_slaves to at least 1 (itself)
     Traffic.n_slaves = 1;
+    Traffic.mode = MODE_MULTIDIRECTION;
 }
 
 void setEnvironment(JsonObject &parsed)
@@ -299,55 +302,67 @@ void primary_lamp_fsm_update()
 
 void secondary_lamp_fsm_update()
 {
-    switch (Slave.secondary.current_state)
+    // if oppSlaveID is -1 then just turn OFF all lamps
+    if (Slave.oppSlaveId == -1)
     {
-    case LampState::OFF:
-        // Turn everything off
         digitalWrite(Slave.secondary.redPin, 0);
         digitalWrite(Slave.secondary.redPin, 1);
         digitalWrite(Slave.secondary.greenFwdPin, 0);
         digitalWrite(Slave.secondary.greenLeftPin, 0);
         digitalWrite(Slave.secondary.greenRightPin, 0);
-        break;
-
-    case LampState::RED:
-        // Turn ON red LED
-        digitalWrite(Slave.secondary.redPin, 1);
-
-        // Turn OFF all greens
-        digitalWrite(Slave.secondary.greenFwdPin, 0);
-        digitalWrite(Slave.secondary.greenLeftPin, 0);
-        digitalWrite(Slave.secondary.greenRightPin, 0);
-        if (delay_is_done(Slave.secondary.timer_Num))
+    }
+    else
+    {
+        switch (Slave.secondary.current_state)
         {
-            Slave.secondary.current_state = LampState::GREEN;
-            delay_set(Slave.secondary.timer_Num, Slave.secondary.timer_green);
-            return;
+        case LampState::OFF:
+            // Turn everything off
+            digitalWrite(Slave.secondary.redPin, 0);
+            digitalWrite(Slave.secondary.redPin, 1);
+            digitalWrite(Slave.secondary.greenFwdPin, 0);
+            digitalWrite(Slave.secondary.greenLeftPin, 0);
+            digitalWrite(Slave.secondary.greenRightPin, 0);
+            break;
+
+        case LampState::RED:
+            // Turn ON red LED
+            digitalWrite(Slave.secondary.redPin, 1);
+
+            // Turn OFF all greens
+            digitalWrite(Slave.secondary.greenFwdPin, 0);
+            digitalWrite(Slave.secondary.greenLeftPin, 0);
+            digitalWrite(Slave.secondary.greenRightPin, 0);
+            if (delay_is_done(Slave.secondary.timer_Num))
+            {
+                Slave.secondary.current_state = LampState::GREEN;
+                delay_set(Slave.secondary.timer_Num, Slave.secondary.timer_green);
+                return;
+            }
+            break;
+
+        case LampState::GREEN:
+            // Turn ON greens
+            digitalWrite(Slave.secondary.greenFwdPin, 1);
+            if (Traffic.mode == MODE_MULTIDIRECTION)
+            {
+                digitalWrite(Slave.secondary.greenLeftPin, 1);
+                digitalWrite(Slave.secondary.greenRightPin, 1);
+            }
+
+            // Turn OFF red
+            digitalWrite(Slave.secondary.redPin, 0);
+
+            if (delay_is_done(Slave.secondary.timer_Num))
+            {
+                Slave.secondary.current_state = LampState::RED;
+                delay_set(Slave.secondary.timer_Num, Slave.secondary.timer_red);
+                return;
+            }
+            break;
+
+        default:
+            break;
         }
-        break;
-
-    case LampState::GREEN:
-        // Turn ON greens
-        digitalWrite(Slave.secondary.greenFwdPin, 1);
-        if (Traffic.mode == MODE_MULTIDIRECTION)
-        {
-            digitalWrite(Slave.secondary.greenLeftPin, 1);
-            digitalWrite(Slave.secondary.greenRightPin, 1);
-        }
-
-        // Turn OFF red
-        digitalWrite(Slave.secondary.redPin, 0);
-
-        if (delay_is_done(Slave.secondary.timer_Num))
-        {
-            Slave.secondary.current_state = LampState::RED;
-            delay_set(Slave.secondary.timer_Num, Slave.secondary.timer_red);
-            return;
-        }
-        break;
-
-    default:
-        break;
     }
 }
 
@@ -371,12 +386,13 @@ int getSpareState()
     return Slave.spare.current_state;
 }
 
-int getTimerNum(int lampID){
-    if(lampID == LampID::PRIMARY || lampID == LampID::OVERHEAD)
+int getTimerNum(int lampID)
+{
+    if (lampID == LampID::PRIMARY || lampID == LampID::OVERHEAD)
         return Slave.primary.timer_Num;
-    else if(lampID == LampID::SECONDARY)
+    else if (lampID == LampID::SECONDARY)
         return Slave.secondary.timer_Num;
-    else if(lampID == LampID::SPARE)
+    else if (lampID == LampID::SPARE)
         return Slave.spare.timer_Num;
     else
         return -1;
@@ -384,41 +400,98 @@ int getTimerNum(int lampID){
 
 unsigned int getElapsedTime(int lampID)
 {
-    if(lampID == LampID::PRIMARY || lampID == LampID::OVERHEAD)
+    if (lampID == LampID::PRIMARY || lampID == LampID::OVERHEAD)
         return delay_get(Slave.primary.timer_Num);
-    else if(lampID == LampID::SECONDARY)
+    else if (lampID == LampID::SECONDARY)
         return delay_get(Slave.secondary.timer_Num);
-    else if(lampID == LampID::SPARE)
+    else if (lampID == LampID::SPARE)
         return delay_get(Slave.spare.timer_Num);
-    else
-        return -1;
 }
 
 int getTimerValues(int lampID, int colourID)
 {
-    if(lampID == LampID::PRIMARY || lampID == LampID::OVERHEAD)
-        if(colourID == LampState::RED)
+    if (lampID == LampID::PRIMARY || lampID == LampID::OVERHEAD)
+    {
+        if (colourID == LampState::RED)
             return Slave.primary.timer_red;
-        else if(colourID == LampState::AMBER)
+        else if (colourID == LampState::AMBER)
             return Slave.primary.timer_yellow;
-        else if(colourID == LampState::GREEN)
+        else if (colourID == LampState::GREEN)
             return Slave.primary.timer_green;
+    }
 
-    else if(lampID == LampID::SECONDARY)
-        if(colourID == LampState::RED)
+    else if (lampID == LampID::SECONDARY)
+    {
+        if (colourID == LampState::RED)
             return Slave.secondary.timer_red;
-        else if(colourID == LampState::AMBER)
+        else if (colourID == LampState::AMBER)
             return Slave.secondary.timer_yellow;
-        else if(colourID == LampState::GREEN)
+        else if (colourID == LampState::GREEN)
             return Slave.secondary.timer_green;
+    }
 
-    else if(lampID == LampID::SPARE)
-        if(colourID == LampState::RED)
+    else if (lampID == LampID::SPARE)
+    {
+        if (colourID == LampState::RED)
             return Slave.spare.timer_red;
-        else if(colourID == LampState::AMBER)
+        else if (colourID == LampState::AMBER)
             return Slave.spare.timer_yellow;
-        else if(colourID == LampState::GREEN)
+        else if (colourID == LampState::GREEN)
             return Slave.spare.timer_green;
+    }
 
-    return -1; //if doesn't return anywhere
+    return -1; // if doesn't return anywhere
+}
+
+unsigned int getRemainingTime(int lampID)
+{
+    if (lampID == LampID::PRIMARY || lampID == LampID::OVERHEAD)
+    {
+        if (Slave.primary.current_state == LampState::RED)
+            return Slave.primary.timer_red - delay_get(Slave.primary.timer_Num);
+        else if (Slave.primary.current_state == LampState::AMBER)
+            return Slave.primary.timer_yellow - delay_get(Slave.primary.timer_Num);
+        else if (Slave.primary.current_state == LampState::GREEN)
+            return Slave.primary.timer_green - delay_get(Slave.primary.timer_Num);
+    }
+
+    else if (lampID == LampID::SECONDARY)
+    {
+        if (Slave.secondary.current_state == LampState::RED)
+            return Slave.secondary.timer_red - delay_get(Slave.secondary.timer_Num);
+        else if (Slave.secondary.current_state == LampState::AMBER)
+            return Slave.secondary.timer_yellow - delay_get(Slave.secondary.timer_Num);
+        else if (Slave.secondary.current_state == LampState::GREEN)
+            return Slave.secondary.timer_green - delay_get(Slave.secondary.timer_Num);
+    }
+
+    else if (lampID == LampID::SPARE)
+    {
+        if (Slave.spare.current_state == LampState::RED)
+            return Slave.spare.timer_red - delay_get(Slave.spare.timer_Num);
+        else if (Slave.spare.current_state == LampState::AMBER)
+            return Slave.spare.timer_yellow - delay_get(Slave.spare.timer_Num);
+        else if (Slave.spare.current_state == LampState::GREEN)
+            return Slave.spare.timer_green - delay_get(Slave.spare.timer_Num);
+    }
+}
+
+int getMode(){
+    return Traffic.mode;
+}
+
+int getTotalSlaves(){
+    return Traffic.n_slaves;
+}
+
+void addSlave(){
+    Traffic.n_slaves++;
+}
+
+void dropSlave(){
+    Traffic.n_slaves--;
+}
+
+void setTotalSlaves(int n){
+    Traffic.n_slaves = n;
 }
