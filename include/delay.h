@@ -15,7 +15,7 @@
 void delay_init();
 
 /* get the current tick counter value for the specified instance */
-unsigned delay_get(unsigned num);
+unsigned int delay_get(unsigned int num);
 
 /* set the counter limit and reset the count for the specified instance */
 void delay_set(unsigned int num, unsigned int time_in_s);

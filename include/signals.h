@@ -1,17 +1,48 @@
 //This is the header file to the .cpp file containing the internal FSM of the LED
+#include "ArduinoJson.h"
 
-void signals_start();  
+enum LampID
+{
+    PRIMARY = 0,
+    SECONDARY = 1,
+    OVERHEAD = 2,
+    SPARE = 3
+};
 
-void signals_update();
+enum LampState
+{
+    RED,
+    AMBER,
+    GREEN,
+    OFF
+};
 
-void signals_set_state(int state);
+void primary_lamp_fsm_update();
 
-void signals_set_mode(int mode);
+void secondary_lamp_fsm_update();
 
-int signals_get_state();
+void lampInit();
 
-void signals_off();
-void signals_red(int val);
-void signals_green_forward(int val);
-void signals_green_left(int val);
-void signals_green_right(int val);
+void initSlave();
+
+void initEnvironment();
+
+void setEnvironment(ArduinoJson::JsonObject &parsed);
+
+void setSlave(ArduinoJson::JsonObject &parsed);
+
+void executeCommandedState_modeDependent();
+
+int getPrimaryState();
+
+int getSecondaryState();
+
+int getOverheadState();
+
+int getSpareState();
+
+int getTimerNum(int lampID);
+
+unsigned int getElapsedTime(int lampID);
+
+int getTimerValues(int lampID, int colourID);

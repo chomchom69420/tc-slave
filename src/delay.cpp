@@ -1,15 +1,23 @@
 #include "delay.h"
 #include "Arduino.h"
 
-static volatile unsigned int delay_count[2] = {0, 0};
-static unsigned int limit[2] = {0, 0};
+/*
+* We are using 4 software timers for the 4 lamps - primary, secondary, overhead, spare
+* Each timer will be tied to a lamp
+* Info about which timer is tied to a particular lamp is stored in the lamp structure
+*/
+
+#define N_TIMERS 4
+
+static volatile unsigned int delay_count[N_TIMERS] = {0, 0, 0, 0};
+static unsigned int limit[N_TIMERS] = {0, 0, 0, 0};
 static unsigned char initialized = 0;
 
 hw_timer_t* signal_timer = NULL;
 
 void ARDUINO_ISR_ATTR onTimer(){
   // Increment the counters
-  for (unsigned int i = 0; i < sizeof(delay_count) / sizeof(delay_count[0]); i++) {
+  for (unsigned int i = 0; i < N_TIMERS; i++) {
         if (delay_count[i] < limit[i]) {
             delay_count[i]++;
         }

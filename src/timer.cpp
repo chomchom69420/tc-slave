@@ -1,7 +1,7 @@
 #include "configurations.h"
 #include "delay.h"
 
-int red_time, green_time, yellow_time;
+static int red_time, green_time, yellow_time;
 
 void timer_update(int timer_red, int timer_green){
     red_time = timer_red;

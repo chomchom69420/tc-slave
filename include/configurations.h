@@ -1,10 +1,13 @@
 // #define SLAVE_ID 1
 // #define SLAVE_ID 2
-#define SLAVE_ID 3
-// #define SLAVE_ID 4
+// #define SLAVE_ID 3
+#define SLAVE_ID 4
 // #define SLAVE_ID 5
 // #define SLAVE_ID 6
 // #define SLAVE_ID 7
+
+
+#define PANEL_ID 20
 
 
 //Pinouts - WROOM
@@ -31,11 +34,25 @@ typedef struct {
 
 
 //Pinouts 
-#define RED 13
-#define AMBER 12
-#define GREEN_FWD 27
-#define GREEN_LEFT 33
-#define GREEN_RIGHT 15
+#define PRIMARY_RED 13
+#define PRIMARY_AMBER 12
+#define PRIMARY_GREEN_FWD 27
+#define PRIMARY_GREEN_LEFT 33
+#define PRIMARY_GREEN_RIGHT 15
+
+//TODO: Set to actual pins in secondary and spare
+#define SECONDARY_RED 0
+#define SECONDARY_AMBER 0
+#define SECONDARY_GREEN_FWD 0
+#define SECONDARY_GREEN_LEFT 0
+#define SECONDARY_GREEN_RIGHT 0
+
+#define SPARE_RED 0
+#define SPARE_AMBER 0
+#define SPARE_GREEN_FWD 0
+#define SPARE_GREEN_LEFT 0
+#define SPARE_GREEN_RIGHT 0
+
 
 
 
