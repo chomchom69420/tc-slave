@@ -11,7 +11,6 @@ PubSubClient mqttClient(wifiClient);
 
 // SlaveStates slave_states;
 String sig_pub_topic = SIGNAL_PUBLISH_TOPIC;
-
 int mode_select;
 
 // Number of times the slaves got the signal - reset only at first time
@@ -62,7 +61,6 @@ void reconnect()
   while (!mqttClient.connected())
   {
     Serial.println("Reconnecting to MQTT Broker..");
-
     // clientId += String(random(0xffff), HEX);
     clientId += String(SLAVE_ID);
     if (mqttClient.connect(clientId.c_str(), username.c_str(), password.c_str(), lastwilltopic, 1, true, lastwillmessage.c_str()))
@@ -93,7 +91,6 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length)
 
   if (strcmp(topic, sig_pub_topic.c_str()) == 0)
   {
-    // Serial.print("here\n");s
     parse_mqtt_signal_commands(payload);
   }
   else if (strcmp(topic, master_topic.c_str()) == 0)
@@ -103,8 +100,6 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length)
     JsonObject &parsed = jb.parseObject(payload);
 
     String master_status = parsed["status"];
-    // Serial.println(recv_payload);
-
     String offline = "Offline";
     String online = "Online";
     if (strcmp(master_status.c_str(), offline.c_str()) == 0)
@@ -127,7 +122,6 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length)
   else if(strcmp(topic, control_topic.c_str()) == 0)
   {
     //Make the jsonobject for sending to parse 
-
     const int capacity = JSON_OBJECT_SIZE(6);
     StaticJsonBuffer<capacity> jb;
     JsonObject &parsed = jb.parseObject(payload);
@@ -147,10 +141,8 @@ void parse_mqtt_signal_commands(byte *payload)
     delay(5000);
     return;
   }
-
   setEnvironment(parsed); //Set the environment
   setSlave(parsed);
-
   executeCommandedState_modeDependent();
 }
 
@@ -160,7 +152,6 @@ void publish_state()
   char payload[500];
   const int capacity = JSON_OBJECT_SIZE(10);
   StaticJsonBuffer<capacity> jb;
-  // Create a JsonObject
   JsonObject &obj = jb.createObject();
 
   obj["id"] = SLAVE_ID;

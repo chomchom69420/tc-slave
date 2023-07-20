@@ -162,7 +162,7 @@ void setSlave(JsonObject &parsed)
     Slave.secondary.timer_green = secondary_timer["green"];
 }
 
-void lampInit()
+void initLamp()
 {
     // Start every signal in OFF state
     Slave.primary.commanded_state = LampState::OFF;

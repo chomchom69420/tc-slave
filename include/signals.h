@@ -40,7 +40,7 @@ void initEnvironment();
 /*
 Initializes all lamps by putting them in OFF state
 */
-void lampInit();
+void initLamp();
 
 /*
 Takes a JsonObject and sets the environment

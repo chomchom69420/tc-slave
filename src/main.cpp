@@ -2,7 +2,6 @@
 #include <PubSubClient.h>
 #include "mqtt.h"
 #include "delay.h"
-#include "timer.h"
 #include "signals.h"
 #include "configurations.h"
 #include "control.h"
@@ -18,8 +17,11 @@ void setup()
     digitalWrite(13, LOW);
     last_time = millis();
 
-    // Setup the timers
-    timer_update(DEFAULT_TIMER_RED, DEFAULT_TIMER_GREEN);
+    //Initialize
+    initSlave();
+    initEnvironment();
+    initLamp();
+    delay_init();
 }
 
 void loop()
@@ -29,7 +31,6 @@ void loop()
         reconnect();
     if (now - last_time > 30000)
     {
-        // reconnect();
         publish_state();
         last_time = now;
     }
