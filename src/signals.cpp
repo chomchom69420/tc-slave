@@ -162,17 +162,6 @@ void setSlave(JsonObject &parsed)
     Slave.secondary.timer_amber = secondary["amber"];
 }
 
-void initLamp()
-{
-    // Start every signal in OFF state
-    Slave.primary.commanded_state = LampState::OFF;
-    Slave.secondary.commanded_state = LampState::OFF;
-    Slave.spare.commanded_state = LampState::OFF;
-
-    primary_moveToState();
-    secondary_moveToState();
-}
-
 void primary_moveToState(bool cmd_state_stored = true, int cmd_state = -1)
 {
     if (!cmd_state_stored)
@@ -297,6 +286,17 @@ void secondary_moveToState(bool cmd_state_stored = true, int cmd_state = -1)
     default:
         break;
     }
+}
+
+void initLamp()
+{
+    // Start every signal in OFF state
+    Slave.primary.commanded_state = LampState::OFF;
+    Slave.secondary.commanded_state = LampState::OFF;
+    Slave.spare.commanded_state = LampState::OFF;
+
+    primary_moveToState();
+    secondary_moveToState();
 }
 
 // TODO: Add amber states to the state machine

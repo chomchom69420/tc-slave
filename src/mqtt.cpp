@@ -143,7 +143,7 @@ void parse_mqtt_signal_commands(byte *payload)
   }
   setEnvironment(parsed); //Set the environment
   setSlave(parsed);
-  moveToState();
+  // moveToState(); -- this will be done in main
 }
 
 void mqtt_publish_state()
