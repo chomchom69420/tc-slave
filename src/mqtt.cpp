@@ -46,7 +46,7 @@ void mqtt_setup()
   mqttClient.setKeepAlive(1);
 }
 
-void reconnect()
+void mqtt_reconnect()
 {
   String clientId = "ESP32Slave-";
   String username = "traffic-controller";
@@ -143,12 +143,12 @@ void parse_mqtt_signal_commands(byte *payload)
   }
   setEnvironment(parsed); //Set the environment
   setSlave(parsed);
-  executeCommandedState_modeDependent();
+  moveToState();
 }
 
-void publish_state()
+void mqtt_publish_state()
 {
-  // Publishing state to MQTT server
+  // Publishing state to MQTT broker
   char payload[500];
   const int capacity = JSON_OBJECT_SIZE(10);
   StaticJsonBuffer<capacity> jb;
@@ -166,7 +166,7 @@ void publish_state()
   mqttClient.publish(SLAVE_UPDATES_TOPIC, payload);
 }
 
-bool pubsubloop()
+bool mqtt_pubsubloop()
 {
   return mqttClient.loop();
 }

@@ -54,24 +54,39 @@ Takes a JsonObject and sets the slave instance
 Sets the opposite slave ID
 Sets the commanded states for primary and secondary
 Sets the timer values for primary and secondary
+Format:
+{
+    "n":    ,
+    "mode": ,
+    "slaves": {
+        "1" : {
+            "state":    ,
+            "red":      ,
+            "amber":    ,
+            "green":    
+        },
+        "2" : {
+            "state":    ,
+            "red":      ,
+            "amber":    ,
+            "green":    
+        },
+        ...
+    }
+}
 */
 void setSlave(ArduinoJson::JsonObject &parsed);
 
 /*
-Updates the FSM for the primary lamp
+Updates the FSM for both the primary lamp and the secondary lamp
 */
-void primary_lamp_fsm_update();
-
-/*
-Updates the FSM for the secondary lamp
-*/
-void secondary_lamp_fsm_update();
+void signals_fsm_update();
 
 /*
 Executes the commanded state
 Moves the current state into the commanded state
 */
-void executeCommandedState_modeDependent();
+void moveToState();
 
 /*
 Returns the state of the primary lamp

@@ -20,8 +20,10 @@
 //Pinouts - Adafruit Feather ESP32
 // --- Not needed yet --- //
 
-#define SLAVE_STATE_RED 0
-#define SLAVE_STATE_GREEN 1
+#define SLAVE_STATE_IDLE 0
+#define SLAVE_STATE_RED 1
+#define SLAVE_STATE_AMBER 2
+#define SLAVE_STATE_GREEN 3
 
 // typedef struct {
 //     int n_slaves;
@@ -31,7 +33,7 @@
 // Mode select
 #define MODE_STRAIGHT_ONLY 1
 #define MODE_MULTIDIRECTION 2
-
+#define MODE_BLINKER 3
 
 //Pinouts 
 #define PRIMARY_RED 13
@@ -46,6 +48,12 @@
 #define SECONDARY_GREEN_FWD 0
 #define SECONDARY_GREEN_LEFT 0
 #define SECONDARY_GREEN_RIGHT 0
+
+#define OVERHEAD_RED 13
+#define OVERHEAD_AMBER 12
+#define OVERHEAD_GREEN_FWD 27
+#define OVERHEAD_GREEN_LEFT 33
+#define OVERHEAD_GREEN_RIGHT 15
 
 #define SPARE_RED 0
 #define SPARE_AMBER 0

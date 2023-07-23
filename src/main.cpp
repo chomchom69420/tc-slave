@@ -11,34 +11,35 @@ long now, last_time;
 void setup()
 {
     Serial.begin(9600);
-    pinMode(13, OUTPUT);
+
+    //Setup mqtt
     mqtt_setup();
-    reconnect();
-    digitalWrite(13, LOW);
-    last_time = millis();
+    mqtt_reconnect();
 
     //Initialize
     initSlave();
     initEnvironment();
     initLamp();
     delay_init();
+
+    last_time = millis();
 }
 
 void loop()
 {
     now = millis();
-    if (!pubsubloop())
-        reconnect();
+    if (!mqtt_pubsubloop())
+        mqtt_reconnect();
     if (now - last_time > 30000)
     {
-        publish_state();
+        mqtt_publish_state();
         last_time = now;
     }
 
     // FSM is used only when master is offline in AUTO mode. Otherwise, always use direct commands
     if (getControlMode() == ControlMode::AUTO && !mqtt_master_online())
     {
-        primary_lamp_fsm_update();
-        secondary_lamp_fsm_update();
+        Serial.println("In manual mode (master is offline or LCP is active)");
+        signals_fsm_update();
     }
 }

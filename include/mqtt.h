@@ -9,18 +9,18 @@
 void mqtt_setup();
 
 //for connecting to MQTT broker
-void reconnect();
+void mqtt_reconnect();
 
 //callback function is called when a message is received
 void mqtt_callback(char* topic, byte* payload, unsigned int length);
 
 void parse_mqtt_signal_commands(byte* payload);
 
-void publish_state();
+void mqtt_publish_state();
 
 bool mqtt_master_online();
 
-bool pubsubloop();
+bool mqtt_pubsubloop();
 
 /*
 * This function publishes to the /status/logs topic on MQTT
