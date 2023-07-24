@@ -157,8 +157,8 @@ void mqtt_publish_state()
   obj["id"] = SLAVE_ID;
   obj["s"] = getPrimaryState();
   JsonObject &timers = obj.createNestedObject("timers");
-  timers["red"] = getTimerValues(LampID::PRIMARY, LampState::RED);
-  timers["green"] = getTimerValues(LampID::PRIMARY, LampState::GREEN);
+  timers["red"] = getTimerValues(LampID::PRIMARY, SlaveState::AUTO_RED);
+  timers["green"] = getTimerValues(LampID::PRIMARY, SlaveState::AUTO_GREEN);
   obj["t_elapsed"] = getElapsedTime(LampID::PRIMARY);
 
   // Serializing into payload
@@ -179,16 +179,14 @@ bool mqtt_master_online()
 void mqtt_log(String log_message)
 {
   char payload[1000];
-  
-  //Remove the species checking code based on context. When uploading code for master, slave, lcp
   const int capacity = JSON_OBJECT_SIZE(6);  //Required is 5 --> take one more 
   StaticJsonBuffer<capacity> jb;
   JsonObject &obj = jb.createObject();
+
   obj["species"]="slave";
   obj["slave_id"]=SLAVE_ID;
   obj["log"]=log_message;
 
-  // Serializing into payload
   obj.printTo(payload);
   mqttClient.publish("/status/logs", payload);
 }

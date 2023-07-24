@@ -9,12 +9,16 @@ enum LampID
     SPARE = 3
 };
 
-enum LampState
+enum SlaveState
 {
-    RED,
-    AMBER,
-    GREEN,
-    OFF
+    OFF,
+    AUTO_RED,
+    AUTO_AMBER,
+    AUTO_GREEN,
+    DICTATED_RED,
+    DICTATED_AMBER,
+    DICTATED_GREEN, 
+    BLINKER
 };
 
 /*

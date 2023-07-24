@@ -4,6 +4,7 @@
 #include "mqtt.h"
 #include "timer.h"
 #include "configurations.h"
+#include "control.h"
 
 typedef struct lamp
 {
@@ -14,7 +15,7 @@ public:
     int timer_green;
     int timer_amber;
     int timer_Num; // Stores which timer is being assigned
-    int f;         // Frequency (only for blinker mode)
+    int blink_f;         // Frequency (only for blinker mode)
 
     // GPIO configuration info
     int redPin;
@@ -155,11 +156,22 @@ void setSlave(JsonObject &parsed)
     Slave.primary.timer_red = primary["red"];
     Slave.primary.timer_amber = primary["amber"];
     Slave.primary.timer_green = primary["green"];
+    if(Slave.primary.commanded_state == SlaveState::BLINKER)
+    {
+        //parse in the blinker frequency
+        Slave.primary.blink_f = primary["blink_f"];
+    }
 
     Slave.secondary.commanded_state = secondary["state"];
     Slave.secondary.timer_red = secondary["red"];
     Slave.secondary.timer_green = secondary["green"];
     Slave.secondary.timer_amber = secondary["amber"];
+    if(Slave.secondary.commanded_state == SlaveState::BLINKER)
+    {
+        //parse in the blinker frequency
+        Slave.secondary.blink_f = secondary["blink_f"];
+    }
+
 }
 
 void primary_moveToState(bool cmd_state_stored = true, int cmd_state = -1)
@@ -175,7 +187,7 @@ void primary_moveToState(bool cmd_state_stored = true, int cmd_state = -1)
     Slave.primary.current_state = Slave.primary.commanded_state;
     switch (Slave.primary.current_state)
     {
-    case LampState::OFF:
+    case SlaveState::OFF:
         noTone(Slave.primary.amberPin);
         digitalWrite(Slave.primary.redPin, 0);
         digitalWrite(Slave.primary.amberPin, 0);
@@ -184,7 +196,7 @@ void primary_moveToState(bool cmd_state_stored = true, int cmd_state = -1)
         digitalWrite(Slave.primary.greenRightPin, 0);
         break;
 
-    case LampState::RED:
+    case SlaveState::AUTO_RED:
         noTone(Slave.primary.amberPin);
         digitalWrite(Slave.primary.redPin, 1);
         digitalWrite(Slave.primary.amberPin, 0);
@@ -193,7 +205,16 @@ void primary_moveToState(bool cmd_state_stored = true, int cmd_state = -1)
         digitalWrite(Slave.primary.greenRightPin, 0);
         break;
 
-    case LampState::GREEN:
+    case SlaveState::AUTO_AMBER:
+        noTone(Slave.primary.amberPin);
+        digitalWrite(Slave.primary.redPin, 0);
+        digitalWrite(Slave.primary.amberPin, 1);
+        digitalWrite(Slave.primary.greenFwdPin, 0);
+        digitalWrite(Slave.primary.greenLeftPin, 0);
+        digitalWrite(Slave.primary.greenRightPin, 0);
+        break;
+
+    case SlaveState::AUTO_GREEN:
         digitalWrite(Slave.primary.redPin, 0);
         switch (Traffic.mode)
         {
@@ -210,14 +231,57 @@ void primary_moveToState(bool cmd_state_stored = true, int cmd_state = -1)
             digitalWrite(Slave.primary.greenRightPin, 0);
             noTone(Slave.primary.amberPin);
             break;
+        }
+        break;
 
-        case MODE_BLINKER:
-            tone(Slave.primary.amberPin, Slave.primary.f);
-            digitalWrite(Slave.primary.greenFwdPin, 0);
+        /* DICTATED STATES */
+
+    case SlaveState::DICTATED_RED:
+        noTone(Slave.primary.amberPin);
+        digitalWrite(Slave.primary.redPin, 1);
+        digitalWrite(Slave.primary.amberPin, 0);
+        digitalWrite(Slave.primary.greenFwdPin, 0);
+        digitalWrite(Slave.primary.greenLeftPin, 0);
+        digitalWrite(Slave.primary.greenRightPin, 0);
+        break;
+
+    case SlaveState::DICTATED_AMBER:
+        noTone(Slave.primary.amberPin);
+        digitalWrite(Slave.primary.redPin, 0);
+        digitalWrite(Slave.primary.amberPin, 1);
+        digitalWrite(Slave.primary.greenFwdPin, 0);
+        digitalWrite(Slave.primary.greenLeftPin, 0);
+        digitalWrite(Slave.primary.greenRightPin, 0);
+        break;
+
+    case SlaveState::DICTATED_GREEN:
+        digitalWrite(Slave.primary.redPin, 0);
+        switch (Traffic.mode)
+        {
+        case MODE_MULTIDIRECTION:
+            digitalWrite(Slave.primary.greenFwdPin, 1);
+            digitalWrite(Slave.primary.greenLeftPin, 1);
+            digitalWrite(Slave.primary.greenRightPin, 1);
+            noTone(Slave.primary.amberPin);
+            break;
+
+        case MODE_STRAIGHT_ONLY:
+            digitalWrite(Slave.primary.greenFwdPin, 1);
             digitalWrite(Slave.primary.greenLeftPin, 0);
             digitalWrite(Slave.primary.greenRightPin, 0);
+            noTone(Slave.primary.amberPin);
             break;
         }
+        break;
+
+    case SlaveState::BLINKER:
+        tone(Slave.primary.amberPin, Slave.primary.blink_f);
+        digitalWrite(Slave.primary.greenFwdPin, 0);
+        digitalWrite(Slave.primary.greenLeftPin, 0);
+        digitalWrite(Slave.primary.greenRightPin, 0);
+        break;
+
+    default:
         break;
     }
 }
@@ -235,7 +299,7 @@ void secondary_moveToState(bool cmd_state_stored = true, int cmd_state = -1)
     Slave.secondary.current_state = Slave.secondary.commanded_state;
     switch (Slave.secondary.current_state)
     {
-    case LampState::OFF:
+    case SlaveState::OFF:
         noTone(Slave.secondary.amberPin);
         digitalWrite(Slave.secondary.redPin, 0);
         digitalWrite(Slave.secondary.amberPin, 0);
@@ -244,7 +308,7 @@ void secondary_moveToState(bool cmd_state_stored = true, int cmd_state = -1)
         digitalWrite(Slave.secondary.greenRightPin, 0);
         break;
 
-    case LampState::RED:
+    case SlaveState::AUTO_RED:
         noTone(Slave.secondary.amberPin);
         digitalWrite(Slave.secondary.redPin, 1);
         digitalWrite(Slave.secondary.amberPin, 0);
@@ -253,7 +317,16 @@ void secondary_moveToState(bool cmd_state_stored = true, int cmd_state = -1)
         digitalWrite(Slave.secondary.greenRightPin, 0);
         break;
 
-    case LampState::GREEN:
+    case SlaveState::AUTO_AMBER:
+        noTone(Slave.secondary.amberPin);
+        digitalWrite(Slave.secondary.redPin, 0);
+        digitalWrite(Slave.secondary.amberPin, 1);
+        digitalWrite(Slave.secondary.greenFwdPin, 0);
+        digitalWrite(Slave.secondary.greenLeftPin, 0);
+        digitalWrite(Slave.secondary.greenRightPin, 0);
+        break;
+
+    case SlaveState::AUTO_GREEN:
         digitalWrite(Slave.secondary.redPin, 0);
         switch (Traffic.mode)
         {
@@ -270,17 +343,54 @@ void secondary_moveToState(bool cmd_state_stored = true, int cmd_state = -1)
             digitalWrite(Slave.secondary.greenRightPin, 0);
             noTone(Slave.secondary.amberPin);
             break;
+        }
+        break;
 
-        case MODE_BLINKER:
-            tone(Slave.secondary.amberPin, Slave.secondary.f);
-            digitalWrite(Slave.secondary.greenFwdPin, 0);
+        /* DICTATED STATES */
+
+    case SlaveState::DICTATED_RED:
+        noTone(Slave.secondary.amberPin);
+        digitalWrite(Slave.secondary.redPin, 1);
+        digitalWrite(Slave.secondary.amberPin, 0);
+        digitalWrite(Slave.secondary.greenFwdPin, 0);
+        digitalWrite(Slave.secondary.greenLeftPin, 0);
+        digitalWrite(Slave.secondary.greenRightPin, 0);
+        break;
+
+    case SlaveState::DICTATED_AMBER:
+        noTone(Slave.secondary.amberPin);
+        digitalWrite(Slave.secondary.redPin, 0);
+        digitalWrite(Slave.secondary.amberPin, 1);
+        digitalWrite(Slave.secondary.greenFwdPin, 0);
+        digitalWrite(Slave.secondary.greenLeftPin, 0);
+        digitalWrite(Slave.secondary.greenRightPin, 0);
+        break;
+
+    case SlaveState::DICTATED_GREEN:
+        digitalWrite(Slave.secondary.redPin, 0);
+        switch (Traffic.mode)
+        {
+        case MODE_MULTIDIRECTION:
+            digitalWrite(Slave.secondary.greenFwdPin, 1);
+            digitalWrite(Slave.secondary.greenLeftPin, 1);
+            digitalWrite(Slave.secondary.greenRightPin, 1);
+            noTone(Slave.secondary.amberPin);
+            break;
+
+        case MODE_STRAIGHT_ONLY:
+            digitalWrite(Slave.secondary.greenFwdPin, 1);
             digitalWrite(Slave.secondary.greenLeftPin, 0);
             digitalWrite(Slave.secondary.greenRightPin, 0);
-            break;
-
-        default:
+            noTone(Slave.secondary.amberPin);
             break;
         }
+        break;
+
+    case SlaveState::BLINKER:
+        tone(Slave.secondary.amberPin, Slave.secondary.blink_f);
+        digitalWrite(Slave.secondary.greenFwdPin, 0);
+        digitalWrite(Slave.secondary.greenLeftPin, 0);
+        digitalWrite(Slave.secondary.greenRightPin, 0);
         break;
 
     default:
@@ -291,9 +401,9 @@ void secondary_moveToState(bool cmd_state_stored = true, int cmd_state = -1)
 void initLamp()
 {
     // Start every signal in OFF state
-    Slave.primary.commanded_state = LampState::OFF;
-    Slave.secondary.commanded_state = LampState::OFF;
-    Slave.spare.commanded_state = LampState::OFF;
+    Slave.primary.commanded_state = SlaveState::OFF;
+    Slave.secondary.commanded_state = SlaveState::OFF;
+    Slave.spare.commanded_state = SlaveState::OFF;
 
     primary_moveToState();
     secondary_moveToState();
@@ -302,44 +412,110 @@ void initLamp()
 // TODO: Add amber states to the state machine
 static void primary_lamp_fsm_update()
 {
+    int control = getControlMode();
     switch (Slave.primary.current_state)
     {
-    case LampState::OFF:
-        if (Slave.primary.commanded_state != LampState::OFF)
+    case SlaveState::OFF:
+        if (Slave.primary.commanded_state != SlaveState::OFF)
             primary_moveToState();
         break;
 
-    case LampState::RED:
-        if (Slave.primary.commanded_state != LampState::RED)
+    case SlaveState::AUTO_RED:
+        if (control == ControlMode::DICTATED)
+            primary_moveToState(false, SlaveState::DICTATED_RED);
+
+        if(Slave.primary.commanded_state == SlaveState::BLINKER)
             primary_moveToState();
+
         if (delay_is_done(Slave.primary.timer_Num))
         {
-            Slave.primary.current_state = LampState::AMBER;
+            Slave.primary.current_state = SlaveState::AUTO_AMBER;
             delay_set(Slave.primary.timer_Num, Slave.primary.timer_amber);
             break;
         }
         break;
 
-    case LampState::AMBER:
-        if (Slave.primary.commanded_state != LampState::AMBER)
+    case SlaveState::AUTO_AMBER:
+        if (control == ControlMode::DICTATED)
+            primary_moveToState(false, SlaveState::DICTATED_AMBER);
+
+        if(Slave.primary.commanded_state == SlaveState::BLINKER)
             primary_moveToState();
+
         if (delay_is_done(Slave.primary.timer_Num))
         {
-            Slave.primary.current_state = LampState::GREEN;
+            Slave.primary.current_state = SlaveState::AUTO_GREEN;
             delay_set(Slave.primary.timer_Num, Slave.primary.timer_green);
             break;
         }
         break;
 
-    case LampState::GREEN:
-        if (Slave.primary.commanded_state != LampState::GREEN)
+    case SlaveState::AUTO_GREEN:
+        if(control == ControlMode::DICTATED)
+            primary_moveToState(false, SlaveState::DICTATED_GREEN);
+
+        if(Slave.primary.commanded_state == SlaveState::BLINKER)
             primary_moveToState();
+        
         if (delay_is_done(Slave.primary.timer_Num))
         {
-            Slave.primary.current_state = LampState::RED;
+            Slave.primary.current_state = SlaveState::AUTO_RED;
             delay_set(Slave.primary.timer_Num, Slave.primary.timer_red);
             break;
         }
+        break;
+
+    case SlaveState::DICTATED_RED:
+        if(control == ControlMode::AUTO)
+            primary_moveToState(false, SlaveState::AUTO_RED);
+
+        if (Slave.primary.commanded_state == SlaveState::DICTATED_AMBER)
+            primary_moveToState();
+
+        else if(Slave.primary.commanded_state == SlaveState::DICTATED_GREEN)
+            primary_moveToState();
+
+        else if(Slave.primary.commanded_state == SlaveState::BLINKER)
+            primary_moveToState();
+
+        break;
+    
+    case SlaveState::DICTATED_AMBER:
+        if(control == ControlMode::AUTO)
+            primary_moveToState(false, SlaveState::AUTO_AMBER);
+
+        if (Slave.primary.commanded_state == SlaveState::DICTATED_RED)
+            primary_moveToState();
+
+        else if(Slave.primary.commanded_state == SlaveState::DICTATED_GREEN)
+            primary_moveToState();
+
+        else if(Slave.primary.commanded_state == SlaveState::BLINKER)
+            primary_moveToState();
+
+        break;
+    
+    case SlaveState::DICTATED_GREEN:
+        if(control == ControlMode::AUTO)
+            primary_moveToState(false, SlaveState::AUTO_GREEN);
+
+        if (Slave.primary.commanded_state == SlaveState::DICTATED_AMBER)
+            primary_moveToState();
+
+        else if(Slave.primary.commanded_state == SlaveState::DICTATED_RED)
+            primary_moveToState();
+
+        else if(Slave.primary.commanded_state == SlaveState::BLINKER)
+            primary_moveToState();
+
+        break;
+
+    case SlaveState::BLINKER:
+        //It will loop forever until it has been asked to go to DICTATED_RED (this is basically the red extension part)
+
+        if(Slave.primary.commanded_state == SlaveState::DICTATED_RED)
+            primary_moveToState();
+        
         break;
 
     default:
@@ -351,39 +527,39 @@ static void secondary_lamp_fsm_update()
 {
     switch (Slave.secondary.current_state)
     {
-    case LampState::OFF:
-        if (Slave.secondary.commanded_state != LampState::OFF)
+    case SlaveState::OFF:
+        if (Slave.secondary.commanded_state != SlaveState::OFF)
             secondary_moveToState();
         break;
 
-    case LampState::RED:
-        if (Slave.secondary.commanded_state != LampState::RED)
+    case SlaveState::AUTO_RED:
+        if (Slave.secondary.commanded_state != SlaveState::AUTO_RED)
             secondary_moveToState();
         if (delay_is_done(Slave.secondary.timer_Num))
         {
-            Slave.secondary.current_state = LampState::AMBER;
+            Slave.secondary.current_state = SlaveState::AUTO_AMBER;
             delay_set(Slave.secondary.timer_Num, Slave.secondary.timer_amber);
             break;
         }
         break;
 
-    case LampState::AMBER:
-        if (Slave.secondary.commanded_state != LampState::AMBER)
+    case SlaveState::AUTO_AMBER:
+        if (Slave.secondary.commanded_state != SlaveState::AUTO_AMBER)
             secondary_moveToState();
         if (delay_is_done(Slave.secondary.timer_Num))
         {
-            Slave.secondary.current_state = LampState::GREEN;
+            Slave.secondary.current_state = SlaveState::AUTO_GREEN;
             delay_set(Slave.secondary.timer_Num, Slave.secondary.timer_green);
             break;
         }
         break;
 
-    case LampState::GREEN:
-        if (Slave.secondary.commanded_state != LampState::GREEN)
+    case SlaveState::AUTO_GREEN:
+        if (Slave.secondary.commanded_state != SlaveState::AUTO_GREEN)
             secondary_moveToState();
         if (delay_is_done(Slave.secondary.timer_Num))
         {
-            Slave.secondary.current_state = LampState::RED;
+            Slave.secondary.current_state = SlaveState::AUTO_RED;
             delay_set(Slave.secondary.timer_Num, Slave.secondary.timer_red);
             break;
         }
@@ -446,31 +622,31 @@ int getTimerValues(int lampID, int colourID)
 {
     if (lampID == LampID::PRIMARY || lampID == LampID::OVERHEAD)
     {
-        if (colourID == LampState::RED)
+        if (colourID == SlaveState::AUTO_RED)
             return Slave.primary.timer_red;
-        else if (colourID == LampState::AMBER)
+        else if (colourID == SlaveState::AUTO_AMBER)
             return Slave.primary.timer_amber;
-        else if (colourID == LampState::GREEN)
+        else if (colourID == SlaveState::AUTO_GREEN)
             return Slave.primary.timer_green;
     }
 
     else if (lampID == LampID::SECONDARY)
     {
-        if (colourID == LampState::RED)
+        if (colourID == SlaveState::AUTO_RED)
             return Slave.secondary.timer_red;
-        else if (colourID == LampState::AMBER)
+        else if (colourID == SlaveState::AUTO_AMBER)
             return Slave.secondary.timer_amber;
-        else if (colourID == LampState::GREEN)
+        else if (colourID == SlaveState::AUTO_GREEN)
             return Slave.secondary.timer_green;
     }
 
     else if (lampID == LampID::SPARE)
     {
-        if (colourID == LampState::RED)
+        if (colourID == SlaveState::AUTO_RED)
             return Slave.spare.timer_red;
-        else if (colourID == LampState::AMBER)
+        else if (colourID == SlaveState::AUTO_AMBER)
             return Slave.spare.timer_amber;
-        else if (colourID == LampState::GREEN)
+        else if (colourID == SlaveState::AUTO_GREEN)
             return Slave.spare.timer_green;
     }
 
@@ -481,31 +657,31 @@ unsigned int getRemainingTime(int lampID)
 {
     if (lampID == LampID::PRIMARY || lampID == LampID::OVERHEAD)
     {
-        if (Slave.primary.current_state == LampState::RED)
+        if (Slave.primary.current_state == SlaveState::AUTO_RED)
             return Slave.primary.timer_red - delay_get(Slave.primary.timer_Num);
-        else if (Slave.primary.current_state == LampState::AMBER)
+        else if (Slave.primary.current_state == SlaveState::AUTO_AMBER)
             return Slave.primary.timer_amber - delay_get(Slave.primary.timer_Num);
-        else if (Slave.primary.current_state == LampState::GREEN)
+        else if (Slave.primary.current_state == SlaveState::AUTO_GREEN)
             return Slave.primary.timer_green - delay_get(Slave.primary.timer_Num);
     }
 
     else if (lampID == LampID::SECONDARY)
     {
-        if (Slave.secondary.current_state == LampState::RED)
+        if (Slave.secondary.current_state == SlaveState::AUTO_RED)
             return Slave.secondary.timer_red - delay_get(Slave.secondary.timer_Num);
-        else if (Slave.secondary.current_state == LampState::AMBER)
+        else if (Slave.secondary.current_state == SlaveState::AUTO_AMBER)
             return Slave.secondary.timer_amber - delay_get(Slave.secondary.timer_Num);
-        else if (Slave.secondary.current_state == LampState::GREEN)
+        else if (Slave.secondary.current_state == SlaveState::AUTO_GREEN)
             return Slave.secondary.timer_green - delay_get(Slave.secondary.timer_Num);
     }
 
     else if (lampID == LampID::SPARE)
     {
-        if (Slave.spare.current_state == LampState::RED)
+        if (Slave.spare.current_state == SlaveState::AUTO_RED)
             return Slave.spare.timer_red - delay_get(Slave.spare.timer_Num);
-        else if (Slave.spare.current_state == LampState::AMBER)
+        else if (Slave.spare.current_state == SlaveState::AUTO_AMBER)
             return Slave.spare.timer_amber - delay_get(Slave.spare.timer_Num);
-        else if (Slave.spare.current_state == LampState::GREEN)
+        else if (Slave.spare.current_state == SlaveState::AUTO_GREEN)
             return Slave.spare.timer_green - delay_get(Slave.spare.timer_Num);
     }
 }

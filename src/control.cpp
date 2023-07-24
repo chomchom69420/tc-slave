@@ -27,7 +27,7 @@ void setControlMode(JsonObject &parsed)
     }
     else if(parsed["mode"]=="manual")
     {
-        controlMode = ControlMode::MANUAL;
+        controlMode = ControlMode::DICTATED;
     }
     else
     {
