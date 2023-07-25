@@ -24,10 +24,10 @@ bool mqtt_pubsubloop();
 
 /*
 * This function publishes to the /status/logs topic on MQTT
-* Species: master, slave, GUI, app, lcp   (lcp --> local control panel)
+* Species: master, slave, GUI, app, LCP   (LCP --> local control panel)
 * slave_id : (only required for slave)
 * panel_id : (only required for panel)
-* log_message: message that is to be logged  (TODO: set a character limit on this)
+* log_message: message that is to be logged  (Max 100 characters)
 * Payload format:
 {
 “species”: “”
