@@ -159,3 +159,78 @@ Drops a slave from the current total number of slaves
 Usually used when a slave drops from the network
 */
 void dropSlave();
+
+
+                                    /* LAMP CONFIG SECTION  */
+
+/* 
+This section is used for configuring the lamps in the slave. True means the lamp is enabled, false means the lamp is disabled
+If all the lamps are disabled, then the set of lamps (primary/secondary/overhead/spare) is not connected
+This is just to store the intended configuration of the lamps in the slave
+The actual checking of whether a lamp is connected / not connected is performed in the lamp_checker
+*/
+
+typedef struct lamp_config
+{
+    // Lamp enables
+    bool red;
+    bool amber;
+    bool green_fwd, green_l, green_r;
+};
+
+/*
+JSON format for lamp configuration:
+{
+    "1": {
+        "primary": {
+            "red":1,
+            "amber":1, 
+            "green": {
+                "fwd":1,
+                "l":0,
+                "r":0,
+            }    
+        },
+        "secondary": {
+            "red":1,
+            "amber":1, 
+            "green": {
+                "fwd":1,
+                "l":0,
+                "r":0,
+            }
+        },
+        "overhead": {
+            "red":1,
+            "amber":1, 
+            "green": {
+                "fwd":1,
+                "l":0,
+                "r":0,
+            }
+        },
+        "spare": {
+            "red":1,
+            "amber":1, 
+            "green": {
+                "fwd":1,
+                "l":0,
+                "r":0,
+            }
+        }
+    }
+
+    "2": {
+        ...
+    }
+}
+*/
+
+void signals_config_lamps(JsonObject& parsed);
+
+lamp_config signals_get_lamp_config(LampID id);
+
+/*
+Used to initialize the lamp_config
+*/
+void signals_init_lamp_config();

@@ -71,6 +71,7 @@ void mqtt_reconnect()
 
       // Each slave connects to the master's status topic
       mqttClient.subscribe("/status/master", 1);
+      mqttClient.subscribe("/traffic/config");
     }
   }
 
@@ -85,9 +86,10 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length)
   Serial.print("Topic: ");
   Serial.print(topic);
   Serial.print("\n");
-  
+
   String master_topic = "/status/master";
   String control_topic = "/traffic/control";
+  String config_topic = "/traffic/config";
 
   if (strcmp(topic, sig_pub_topic.c_str()) == 0)
   {
@@ -102,30 +104,38 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length)
     String master_status = parsed["status"];
     String offline = "Offline";
     String online = "Online";
+
+    /*Master offline*/
     if (strcmp(master_status.c_str(), offline.c_str()) == 0)
     {
-      // Make master_online = 0
       master_online = 0;
-      Serial.println("Using the fsm...");
+      setControlMode(ControlMode::AUTO);
     }
+
+    /*Master offline*/
     else if (strcmp(master_status.c_str(), online.c_str()) == 0)
     {
-      Serial.println("Stopping fsm usage... Returning to master-slave mode");
       master_online = 1;
-
-      //Wait for next master command
+      setControlMode(ControlMode::AUTO);
     }
   }
-  /*
-  * If the topic is control topic
-  */
-  else if(strcmp(topic, control_topic.c_str()) == 0)
+
+  /*control topic*/
+  else if (strcmp(topic, control_topic.c_str()) == 0)
   {
-    //Make the jsonobject for sending to parse 
-    const int capacity = JSON_OBJECT_SIZE(6);
-    StaticJsonBuffer<capacity> jb;
-    JsonObject &parsed = jb.parseObject(payload);
+    const size_t capacity = JSON_OBJECT_SIZE(2) + 30;
+    DynamicJsonBuffer jsonBuffer(capacity);
+    JsonObject &parsed = jsonBuffer.parseObject(payload);
     setControlMode(parsed);
+  }
+
+  /*Config topic*/
+  else if (strcmp(topic, config_topic.c_str()) == 0)
+  {
+    const size_t capacity = 56 * JSON_OBJECT_SIZE(3) + 7 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7) + 1860;
+    DynamicJsonBuffer jsonBuffer(capacity);
+    JsonObject &parsed = jsonBuffer.parseObject(payload);
+    signals_config_lamps(parsed);
   }
 }
 
@@ -141,7 +151,7 @@ void parse_mqtt_signal_commands(byte *payload)
     delay(5000);
     return;
   }
-  setEnvironment(parsed); //Set the environment
+  setEnvironment(parsed); // Set the environment
   setSlave(parsed);
   // moveToState(); -- this will be done in main
 }
@@ -179,13 +189,13 @@ bool mqtt_master_online()
 void mqtt_log(String log_message)
 {
   char payload[1000];
-  const int capacity = JSON_OBJECT_SIZE(6);  //Required is 5 --> take one more 
+  const int capacity = JSON_OBJECT_SIZE(6); // Required is 5 --> take one more
   StaticJsonBuffer<capacity> jb;
   JsonObject &obj = jb.createObject();
 
-  obj["species"]="slave";
-  obj["slave_id"]=SLAVE_ID;
-  obj["log"]=log_message;
+  obj["species"] = "slave";
+  obj["slave_id"] = SLAVE_ID;
+  obj["log"] = log_message;
 
   obj.printTo(payload);
   mqttClient.publish("/status/logs", payload);

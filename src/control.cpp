@@ -36,3 +36,8 @@ void setControlMode(JsonObject &parsed)
         mqtt_log(msg);
     }
 }
+
+void setControlMode(ControlMode mode)
+{
+    controlMode = mode;
+}
