@@ -1,25 +1,6 @@
 //This is the header file to the .cpp file containing the internal FSM of the LED
 #include "ArduinoJson.h"
-
-enum LampID
-{
-    PRIMARY = 0,
-    SECONDARY = 1,
-    OVERHEAD = 2,
-    SPARE = 3
-};
-
-enum SlaveState
-{
-    OFF,
-    AUTO_RED,
-    AUTO_AMBER,
-    AUTO_GREEN,
-    DICTATED_RED,
-    DICTATED_AMBER,
-    DICTATED_GREEN, 
-    BLINKER
-};
+#include "configurations.h"
 
 /*
 initSlave() function is used to initialize the slave struct 

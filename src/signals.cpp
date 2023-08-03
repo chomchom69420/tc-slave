@@ -3,7 +3,6 @@
 #include "Arduino.h"
 #include "mqtt.h"
 #include "timer.h"
-#include "configurations.h"
 #include "control.h"
 
 typedef struct lamp
