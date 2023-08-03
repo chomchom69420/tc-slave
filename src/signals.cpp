@@ -5,6 +5,15 @@
 #include "timer.h"
 #include "control.h"
 
+typedef struct lamp_states
+{
+    bool red;
+    bool amber;
+    bool g_fwd;
+    bool g_left;
+    bool g_right;
+};
+
 typedef struct lamp
 {
 
@@ -30,9 +39,11 @@ public:
     int time_left;
 
     lamp_config config;
+    lamp_states states;
 
 public:
     /*PUBLIC METHODS*/
+
     void moveToState(bool cmd_state_stored = true, int cmd_state = -1)
     {
         if (!cmd_state_stored)
@@ -48,46 +59,55 @@ public:
         {
         case SlaveState::OFF:
             noTone(amberPin);
-            digitalWrite(redPin, 0);
-            digitalWrite(amberPin, 0);
-            digitalWrite(greenFwdPin, 0);
-            digitalWrite(greenLeftPin, 0);
-            digitalWrite(greenRightPin, 0);
+            states.red = 0;
+            states.amber = 0;
+            states.g_fwd = 0;
+            states.g_left = 0;
+            states.g_right = 0;
+            set_GPIO();
+
             break;
 
         case SlaveState::AUTO_RED:
             noTone(amberPin);
-            digitalWrite(redPin, 1);
-            digitalWrite(amberPin, 0);
-            digitalWrite(greenFwdPin, 0);
-            digitalWrite(greenLeftPin, 0);
-            digitalWrite(greenRightPin, 0);
+            states.red = 1;
+            states.amber = 0;
+            states.g_fwd = 0;
+            states.g_left = 0;
+            states.g_right = 0;
+            set_GPIO();
             break;
 
         case SlaveState::AUTO_AMBER:
             noTone(amberPin);
-            digitalWrite(redPin, 0);
-            digitalWrite(amberPin, 1);
-            digitalWrite(greenFwdPin, 0);
-            digitalWrite(greenLeftPin, 0);
-            digitalWrite(greenRightPin, 0);
+            states.red = 0;
+            states.amber = ;
+            states.g_fwd = 0;
+            states.g_left = 0;
+            states.g_right = 0;
+            set_GPIO();
             break;
 
         case SlaveState::AUTO_GREEN:
-            digitalWrite(redPin, 0);
             switch (Traffic.mode)
             {
             case MODE_MULTIDIRECTION:
-                digitalWrite(greenFwdPin, 1);
-                digitalWrite(greenLeftPin, 1);
-                digitalWrite(greenRightPin, 1);
+                states.red = 0;
+                states.amber = 0;
+                states.g_fwd = 1;
+                states.g_left = 1;
+                states.g_right = 1;
+                set_GPIO();
                 noTone(amberPin);
                 break;
 
             case MODE_STRAIGHT_ONLY:
-                digitalWrite(greenFwdPin, 1);
-                digitalWrite(greenLeftPin, 0);
-                digitalWrite(greenRightPin, 0);
+                states.red = 0;
+                states.amber = 0;
+                states.g_fwd = 1;
+                states.g_left = 0;
+                states.g_right = 0;
+                set_GPIO();
                 noTone(amberPin);
                 break;
             }
@@ -97,47 +117,58 @@ public:
 
         case SlaveState::DICTATED_RED:
             noTone(amberPin);
-            digitalWrite(redPin, 1);
-            digitalWrite(amberPin, 0);
-            digitalWrite(greenFwdPin, 0);
-            digitalWrite(greenLeftPin, 0);
-            digitalWrite(greenRightPin, 0);
+            states.red = 1;
+            states.amber = 0;
+            states.g_fwd = 0;
+            states.g_left = 0;
+            states.g_right = 0;
+            set_GPIO();
             break;
 
         case SlaveState::DICTATED_AMBER:
             noTone(amberPin);
-            digitalWrite(redPin, 0);
-            digitalWrite(amberPin, 1);
-            digitalWrite(greenFwdPin, 0);
-            digitalWrite(greenLeftPin, 0);
-            digitalWrite(greenRightPin, 0);
+            states.red = 0;
+            states.amber = 1;
+            states.g_fwd = 0;
+            states.g_left = 0;
+            states.g_right = 0;
+            set_GPIO();
             break;
 
         case SlaveState::DICTATED_GREEN:
-            digitalWrite(redPin, 0);
             switch (Traffic.mode)
             {
             case MODE_MULTIDIRECTION:
-                digitalWrite(greenFwdPin, 1);
-                digitalWrite(greenLeftPin, 1);
-                digitalWrite(greenRightPin, 1);
+                states.red = 0;
+                states.amber = 0;
+                states.g_fwd = 1;
+                states.g_left = 1;
+                states.g_right = 1;
+                set_GPIO();
                 noTone(amberPin);
                 break;
 
             case MODE_STRAIGHT_ONLY:
-                digitalWrite(greenFwdPin, 1);
-                digitalWrite(greenLeftPin, 0);
-                digitalWrite(greenRightPin, 0);
+                states.red = 0;
+                states.amber = 0;
+                states.g_fwd = 1;
+                states.g_left = 0;
+                states.g_right = 0;
+                set_GPIO();
                 noTone(amberPin);
                 break;
             }
             break;
 
         case SlaveState::BLINKER:
+            states.red = 0;
+            states.amber = 0;
+            states.g_fwd = 0;
+            states.g_left = 0;
+            states.g_right = 0;
+            set_GPIO();
             tone(amberPin, blink_f);
-            digitalWrite(greenFwdPin, 0);
-            digitalWrite(greenLeftPin, 0);
-            digitalWrite(greenRightPin, 0);
+
             break;
 
         default:
@@ -285,13 +316,13 @@ public:
         blink_f = 0;
     }
 
-    void set_GPIO(int red, int amber, int green_fwd, int green_left, int green_right)
+    void set_GPIO()
     {
-        redPin = red;
-        amberPin = amber;
-        greenFwdPin = green_fwd;
-        greenLeftPin = green_left;
-        greenRightPin = green_right;
+        digitalWrite(redPin, states.red);
+        digitalWrite(amberPin, states.amber);
+        digitalWrite(greenFwdPin, states.g_fwd);
+        digitalWrite(greenLeftPin, states.g_left);
+        digitalWrite(greenRightPin, states.g_right);
     }
 };
 
@@ -576,6 +607,73 @@ void setTotalSlaves(int n)
     Traffic.n_slaves = n;
 }
 
+bool signals_get_lamp_status(LampID id, Lamp_Channel channel)
+{
+    switch (id)
+    {
+    case LampID::PRIMARY:
+        switch (channel)
+        {
+        case Lamp_Channel::RED:
+            return Slave.primary.states.red;
+        case Lamp_Channel::AMBER:
+            return Slave.primary.states.amber;
+        case Lamp_Channel::GREEN_FWD:
+            return Slave.primary.states.g_fwd;
+        case Lamp_Channel::GREEN_LEFT:
+            return Slave.primary.states.g_left;
+        case Lamp_Channel::GREEN_RIGHT:
+            return Slave.primary.states.g_right;
+        }
+
+    case LampID::SECONDARY:
+        switch (channel)
+        {
+        case Lamp_Channel::RED:
+            return Slave.secondary.states.red;
+        case Lamp_Channel::AMBER:
+            return Slave.secondary.states.amber;
+        case Lamp_Channel::GREEN_FWD:
+            return Slave.secondary.states.g_fwd;
+        case Lamp_Channel::GREEN_LEFT:
+            return Slave.secondary.states.g_left;
+        case Lamp_Channel::GREEN_RIGHT:
+            return Slave.secondary.states.g_right;
+        }
+    case LampID::OVERHEAD:
+        switch (channel)
+        {
+        case Lamp_Channel::RED:
+            return Slave.overhead.states.red;
+        case Lamp_Channel::AMBER:
+            return Slave.overhead.states.amber;
+        case Lamp_Channel::GREEN_FWD:
+            return Slave.overhead.states.g_fwd;
+        case Lamp_Channel::GREEN_LEFT:
+            return Slave.overhead.states.g_left;
+        case Lamp_Channel::GREEN_RIGHT:
+            return Slave.overhead.states.g_right;
+        }
+    case LampID::SPARE:
+        switch (channel)
+        {
+        case Lamp_Channel::RED:
+            return Slave.spare.states.red;
+        case Lamp_Channel::AMBER:
+            return Slave.spare.states.amber;
+        case Lamp_Channel::GREEN_FWD:
+            return Slave.spare.states.g_fwd;
+        case Lamp_Channel::GREEN_LEFT:
+            return Slave.spare.states.g_left;
+        case Lamp_Channel::GREEN_RIGHT:
+            return Slave.spare.states.g_right;
+        }
+
+    default:
+        break;
+    }
+}
+
 /* LAMP CONFIG PART */
 
 void signals_config_lamps(ArduinoJson::JsonObject &parsed)
@@ -622,4 +720,73 @@ void signals_init_lamp_config()
     Slave.secondary.init_lamp_config();
     Slave.overhead.init_lamp_config();
     Slave.spare.init_lamp_config();
+}
+
+bool get_lamp_enable(LampID id, Lamp_Channel channel)
+{
+    switch (id)
+    {
+    case LampID::PRIMARY:
+        switch (channel)
+        {
+        case Lamp_Channel::RED:
+            return Slave.primary.config.red;
+        case Lamp_Channel::AMBER:
+            return Slave.primary.config.amber;
+        case Lamp_Channel::GREEN_FWD:
+            return Slave.primary.config.green_fwd;
+        case Lamp_Channel::GREEN_LEFT:
+            return Slave.primary.config.green_l;
+        case Lamp_Channel::GREEN_RIGHT:
+            return Slave.primary.config.green_r;
+        }
+
+    case LampID::SECONDARY:
+        switch (channel)
+        {
+        case Lamp_Channel::RED:
+            return Slave.secondary.config.red;
+        case Lamp_Channel::AMBER:
+            return Slave.secondary.config.amber;
+        case Lamp_Channel::GREEN_FWD:
+            return Slave.secondary.config.green_fwd;
+        case Lamp_Channel::GREEN_LEFT:
+            return Slave.secondary.config.green_l;
+        case Lamp_Channel::GREEN_RIGHT:
+            return Slave.secondary.config.green_r;
+        }
+
+    case LampID::OVERHEAD:
+        switch (channel)
+        {
+        case Lamp_Channel::RED:
+            return Slave.overhead.config.red;
+        case Lamp_Channel::AMBER:
+            return Slave.overhead.config.amber;
+        case Lamp_Channel::GREEN_FWD:
+            return Slave.overhead.config.green_fwd;
+        case Lamp_Channel::GREEN_LEFT:
+            return Slave.overhead.config.green_l;
+        case Lamp_Channel::GREEN_RIGHT:
+            return Slave.overhead.config.green_r;
+        }
+
+    case LampID::SPARE:
+        switch (channel)
+        {
+        case Lamp_Channel::RED:
+            return Slave.spare.config.red;
+        case Lamp_Channel::AMBER:
+            return Slave.spare.config.amber;
+        case Lamp_Channel::GREEN_FWD:
+            return Slave.spare.config.green_fwd;
+        case Lamp_Channel::GREEN_LEFT:
+            return Slave.spare.config.green_l;
+        case Lamp_Channel::GREEN_RIGHT:
+            return Slave.spare.config.green_r;
+        }
+
+    default:
+        break;
+    }
 }

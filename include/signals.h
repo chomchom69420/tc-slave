@@ -94,6 +94,11 @@ Returns the state of the spare lamp
 int getSpareState();
 
 /*
+Returns the state of the specific lamp in the lamp group
+*/
+bool signals_get_lamp_status(LampID id, Lamp_Channel channel);
+
+/*
 Returns the timer number of the specific lamp with lampID in LampID enum
 */
 int getTimerNum(int lampID);
@@ -206,6 +211,8 @@ JSON format for lamp configuration:
     }
 }
 */
+
+bool get_lamp_enable(LampID id, Lamp_Channel channel);
 
 void signals_config_lamps(JsonObject& parsed);
 

@@ -200,3 +200,8 @@ void mqtt_log(String log_message)
   obj.printTo(payload);
   mqttClient.publish("/status/logs", payload);
 }
+
+void mqtt_publish(char *topic, char *payload)
+{
+  mqttClient.publish(topic, payload);
+}

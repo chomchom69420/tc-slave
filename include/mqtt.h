@@ -39,3 +39,5 @@ bool mqtt_pubsubloop();
 * TODO: Implement the timestamp feature in logging 
 */
 void mqtt_log(String log_message);
+
+void mqtt_publish(char* topic, char* payload);

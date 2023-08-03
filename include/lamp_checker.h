@@ -10,7 +10,8 @@ This api:
 /*
 Sets the MUX selector pins as output and sets up analog read
 
-Sets the threshold current to  A
+Sets the on threshold current to 1 A
+Sets the overcurrent limit to 3.5 A
 
 */
 void lamp_checker_init();
@@ -38,15 +39,111 @@ Return values:
 */
 bool get_lamp_status(LampID id, Lamp_Channel colour_channel);
 
+/*
+Logs the lamp status in an mqtt message
+Topic: /traffic/lamp_status
+JSON payload format:
+{
+    "slave_id": ,
+    "primary": {
+        "red": 0,
+        "amber": 1,
+        "g_fwd": 0,
+        "g_left": 1,
+        "g_right": 0
+    },
+    "secondary": {
+        "red": 0,
+        "amber": 1,
+        "g_fwd": 0,
+        "g_left": 1,
+        "g_right": 0
+    },
+    "overhead": {
+        "red": 0,
+        "amber": 1,
+        "g_fwd": 0,
+        "g_left": 1,
+        "g_right": 0
+    },
+    "spare": {
+        "red": 0,
+        "amber": 1,
+        "g_fwd": 0,
+        "g_left": 1,
+        "g_right": 0
+    }
+}
+*/
 void log_lamp_status();
 
 /*
-Sets the threshold current for declaring the lamp to be ON
+Checks the lamp states against the desired states and logs the results in an MQTT message
+Topic: /traffic/monitoring
+JSON payload format:
+{
+    "slave_id": ,
+    "primary": {
+        "red": 0,
+        "amber": 1,
+        "g_fwd": 0,
+        "g_left": 1,
+        "g_right": 0
+    },
+    "secondary": {
+        "red": 0,
+        "amber": 1,
+        "g_fwd": 0,
+        "g_left": 1,
+        "g_right": 0
+    },
+    "overhead": {
+        "red": 0,
+        "amber": 1,
+        "g_fwd": 0,
+        "g_left": 1,
+        "g_right": 0
+    },
+    "spare": {
+        "red": 0,
+        "amber": 1,
+        "g_fwd": 0,
+        "g_left": 1,
+        "g_right": 0
+    }
+}
 */
-void set_thresh_current(int i);
+void lamp_checker_log_health();
+
+/*
+Returns an error code:
+0 → healthy 
+This means that the Lamp is OFF and the intended state is OFF or disabled. 
+
+1 → error
+This means that the actual state is not the same as the desired state. ON / OFF or OFF / ON
+
+2 → overcurrent
+This means that the current is greater than the overcurrent limit
+*/
+int health_code(LampID id, Lamp_Channel colour_channel);
 
 /*
 Sets the threshold current for declaring the lamp to be ON
 */
-void get_thresh_current(int i);
+void set_thresh_current(float i);
 
+/*
+Returns the threshold current for declaring the lamp to be ON
+*/
+float get_thresh_current();
+
+/*
+Sets the overcurrent limit for declaring the lamp
+*/
+void set_overcurrent_limit(float i);
+
+/*
+Returns the overcurrent limit for declaring the lamp
+*/
+float get_overcurrent_limit();
