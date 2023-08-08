@@ -14,8 +14,9 @@ void setControlMode(JsonObject &parsed)
     if(parsed["panel_id"]!=PANEL_ID)
     {
         //Invalid panel, ignore
-        char msg[]="Invalid panel ID";
-        log("/status/logs", msg);
+        const char* message="Invalid panel ID";
+        const char* topic = "/status/logs";
+        log(topic, message);
         return;
     }
     

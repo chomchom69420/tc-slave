@@ -1,5 +1,5 @@
 #include "log.h"
 
-void log(char* topic, char* payload) {
+void log(const char* topic, const char* payload) {
     mqtt_publish(topic, payload);
 }

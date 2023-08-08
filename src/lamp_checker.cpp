@@ -159,6 +159,8 @@ void lamp_checker_log_health()
 {
     char payload[700];
 
+    const char* payload_ptr = payload;
+
     const size_t capacity = 5 * JSON_OBJECT_SIZE(5) + 240;
     DynamicJsonBuffer jsonBuffer(capacity);
     JsonObject &root = jsonBuffer.createObject();
@@ -194,5 +196,6 @@ void lamp_checker_log_health()
     overhead["g_right"] = health_code(LampID::OVERHEAD, Lamp_Channel::GREEN_RIGHT);
 
     root.printTo(payload);
-    log(payload, "/traffic/monitoring");
+    const char* topic = "/traffic/monitoring";
+    log(topic, payload_ptr);
 }

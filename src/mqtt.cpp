@@ -198,7 +198,7 @@ void mqtt_log(String log_message)
   mqttClient.publish("/status/logs", payload);
 }
 
-void mqtt_publish(char *topic, char *payload)
+void mqtt_publish(const char *topic, const char *payload)
 {
   mqttClient.publish(topic, payload);
 }

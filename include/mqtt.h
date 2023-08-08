@@ -42,4 +42,4 @@ bool mqtt_pubsubloop();
 */
 void mqtt_log(String log_message);
 
-void mqtt_publish(char* topic, char* payload);
+void mqtt_publish(const char* topic, const char* payload);

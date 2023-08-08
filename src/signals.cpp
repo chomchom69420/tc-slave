@@ -1,9 +1,5 @@
 #include "signals.h"
 #include "signals_mqtt.h"
-// #include "Arduino.h"
-// #include "mqtt.h"
-// #include "timer.h"
-
 
 typedef struct lamp_states
 {
@@ -346,7 +342,6 @@ public:
     // Slave general configuration info
     int slaveId;
     int oppSlaveId; // ID of opposite slave (-1 if none)
-    int panelId;
 
     lamp primary;
     lamp secondary;
@@ -383,7 +378,6 @@ void initSlave()
     // This function is used to initialize the struct Slave
     Slave.slaveId = SLAVE_ID;
     setOppositeSlaveID();
-    Slave.panelId = PANEL_ID;
 
     /* PRIMARY */
     Slave.primary.init_params_to_zero();
@@ -524,7 +518,7 @@ unsigned int getElapsedTime(int lampID)
         return delay_get(Slave.primary.timer_Num);
     else if (lampID == LampID::SECONDARY)
         return delay_get(Slave.secondary.timer_Num);
-    else if (lampID == LampID::SPARE)
+    else    // else if (lampID == LampID::SPARE)
         return delay_get(Slave.spare.timer_Num);
 }
 
