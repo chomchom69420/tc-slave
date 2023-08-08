@@ -34,6 +34,13 @@ enum SlaveState
     BLINKER
 };
 
+enum ControlMode
+{
+    AUTO,               //Auto is when the slave is not receiving commands, and running on its own
+    DICTATED            //Dictated is when slave is receiving commands, either from Master or manually through the Local Control Panel (LCP)
+};
+
+
 #define PANEL_ID 20
 
 //Pinouts - WROOM
@@ -83,22 +90,9 @@ enum SlaveState
 #define SPARE_GREEN_LEFT 19
 #define SPARE_GREEN_RIGHT 21
 
-enum Current_Sense_Sel {
-    SEL0 = 1,
-    SEL1 = 22,
-    SEL2 = 23
-};
-
 #define CURRENT_SENSE_SEL0 1
 #define CURRENT_SENSE_SEL1 22
 #define CURRENT_SENSE_SEL2 23
-
-enum Current_Sense_Input {
-    PRIMARY = 33,
-    SECONDARY = 32,
-    OVERHEAD = 35,
-    SPARE = 34
-};
 
 #define PRIMARY_CURRENT_SENSE_IN 33
 #define SECONDARY_CURRENT_SENSE_IN 32

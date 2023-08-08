@@ -1,10 +1,7 @@
 #include "mqtt.h"
 #include "credentials.h"
-#include "delay.h"
-#include "signals.h"
-#include "control.h"
-#include <WiFi.h>
-#include <ArduinoJson.h>
+#include "signals_mqtt.h"
+#include "control_mqtt.h"
 
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
@@ -109,14 +106,14 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length)
     if (strcmp(master_status.c_str(), offline.c_str()) == 0)
     {
       master_online = 0;
-      setControlMode(ControlMode::AUTO);
+      setControlMode(parsed);
     }
 
     /*Master offline*/
     else if (strcmp(master_status.c_str(), online.c_str()) == 0)
     {
       master_online = 1;
-      setControlMode(ControlMode::AUTO);
+      setControlMode(parsed);
     }
   }
 

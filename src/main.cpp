@@ -1,10 +1,11 @@
 #include <Arduino.h>
 #include <PubSubClient.h>
-#include "mqtt.h"
-#include "delay.h"
-#include "signals.h"
-#include "configurations.h"
-#include "control.h"
+// #include "mqtt.h"
+// #include "delay.h"
+// #include "signals.h"
+// #include "configurations.h"
+// #include "control.h"
+#include "lamp_checker.h"
 
 long now, last_time;
 

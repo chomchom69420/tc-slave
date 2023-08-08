@@ -11,6 +11,8 @@
 #ifndef DELAY_H_INCLUDED
 #define DELAY_H_INCLUDED
 
+#include "Arduino.h"
+
 /*initialize the timer with correct prescaler, clock frequency and overflow interrupt value, enable interrupts*/
 void delay_init();
 

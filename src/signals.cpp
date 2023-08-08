@@ -1,9 +1,9 @@
 #include "signals.h"
-#include "delay.h"
-#include "Arduino.h"
-#include "mqtt.h"
-#include "timer.h"
-#include "control.h"
+#include "signals_mqtt.h"
+// #include "Arduino.h"
+// #include "mqtt.h"
+// #include "timer.h"
+
 
 typedef struct lamp_states
 {
@@ -44,7 +44,7 @@ public:
 public:
     /*PUBLIC METHODS*/
 
-    void moveToState(bool cmd_state_stored = true, int cmd_state = -1)
+    void moveToState(bool cmd_state_stored, int cmd_state, int mode)
     {
         if (!cmd_state_stored)
         {
@@ -81,7 +81,7 @@ public:
         case SlaveState::AUTO_AMBER:
             noTone(amberPin);
             states.red = 0;
-            states.amber = ;
+            states.amber = 1;
             states.g_fwd = 0;
             states.g_left = 0;
             states.g_right = 0;
@@ -89,7 +89,7 @@ public:
             break;
 
         case SlaveState::AUTO_GREEN:
-            switch (Traffic.mode)
+            switch (mode)
             {
             case MODE_MULTIDIRECTION:
                 states.red = 0;
@@ -136,7 +136,7 @@ public:
             break;
 
         case SlaveState::DICTATED_GREEN:
-            switch (Traffic.mode)
+            switch (mode)
             {
             case MODE_MULTIDIRECTION:
                 states.red = 0;
@@ -176,22 +176,22 @@ public:
         }
     }
 
-    void lampFsmUpdate()
+    void lampFsmUpdate(int mode)
     {
         int control = getControlMode();
         switch (current_state)
         {
         case SlaveState::OFF:
             if (commanded_state != SlaveState::OFF)
-                moveToState();
+                moveToState(true, -1, mode);
             break;
 
         case SlaveState::AUTO_RED:
             if (control == ControlMode::DICTATED)
-                moveToState(false, SlaveState::DICTATED_RED);
+                moveToState(false, SlaveState::DICTATED_RED, mode);
 
             if (commanded_state == SlaveState::BLINKER)
-                moveToState();
+                moveToState(true, -1, mode);
 
             if (delay_is_done(timer_Num))
             {
@@ -203,10 +203,10 @@ public:
 
         case SlaveState::AUTO_AMBER:
             if (control == ControlMode::DICTATED)
-                moveToState(false, SlaveState::DICTATED_AMBER);
+                moveToState(false, SlaveState::DICTATED_AMBER, mode);
 
             if (commanded_state == SlaveState::BLINKER)
-                moveToState();
+                moveToState(true, -1, mode);
 
             if (delay_is_done(timer_Num))
             {
@@ -218,10 +218,10 @@ public:
 
         case SlaveState::AUTO_GREEN:
             if (control == ControlMode::DICTATED)
-                moveToState(false, SlaveState::DICTATED_GREEN);
+                moveToState(false, SlaveState::DICTATED_GREEN, mode);
 
             if (commanded_state == SlaveState::BLINKER)
-                moveToState();
+                moveToState(true, -1, mode);
 
             if (delay_is_done(timer_Num))
             {
@@ -233,46 +233,46 @@ public:
 
         case SlaveState::DICTATED_RED:
             if (control == ControlMode::AUTO)
-                moveToState(false, SlaveState::AUTO_RED);
+                moveToState(false, SlaveState::AUTO_RED, mode);
 
             if (commanded_state == SlaveState::DICTATED_AMBER)
-                moveToState();
+                moveToState(true, -1, mode);
 
             else if (commanded_state == SlaveState::DICTATED_GREEN)
-                moveToState();
+                moveToState(true, -1, mode);
 
             else if (commanded_state == SlaveState::BLINKER)
-                moveToState();
+                moveToState(true, -1, mode);
 
             break;
 
         case SlaveState::DICTATED_AMBER:
             if (control == ControlMode::AUTO)
-                moveToState(false, SlaveState::AUTO_AMBER);
+                moveToState(false, SlaveState::AUTO_AMBER,mode);
 
             if (commanded_state == SlaveState::DICTATED_RED)
-                moveToState();
+                moveToState(true, -1, mode);
 
             else if (commanded_state == SlaveState::DICTATED_GREEN)
-                moveToState();
+                moveToState(true, -1, mode);
 
             else if (commanded_state == SlaveState::BLINKER)
-                moveToState();
+                moveToState(true, -1, mode);
 
             break;
 
         case SlaveState::DICTATED_GREEN:
             if (control == ControlMode::AUTO)
-                moveToState(false, SlaveState::AUTO_GREEN);
+                moveToState(false, SlaveState::AUTO_GREEN, mode);
 
-            if (commanded_state == SlaveState::DICTATED_AMBER)
-                moveToState();
+            if (commanded_state == SlaveState::DICTATED_AMBER, mode)
+                moveToState(true, -1, mode);
 
-            else if (commanded_state == SlaveState::DICTATED_RED)
-                moveToState();
+            else if (commanded_state == SlaveState::DICTATED_RED, mode)
+                moveToState(true, -1, mode);
 
             else if (commanded_state == SlaveState::BLINKER)
-                moveToState();
+                moveToState(true, -1, mode);
 
             break;
 
@@ -280,7 +280,7 @@ public:
             // It will loop forever until it has been asked to go to DICTATED_RED (this is basically the red extension part)
 
             if (commanded_state == SlaveState::DICTATED_RED)
-                moveToState();
+                moveToState(true, -1, mode);
 
             break;
 
@@ -323,6 +323,20 @@ public:
         digitalWrite(greenFwdPin, states.g_fwd);
         digitalWrite(greenLeftPin, states.g_left);
         digitalWrite(greenRightPin, states.g_right);
+    }
+
+    void set_GPIO_Pins(int rPin, int ambPin, int gFwdPin, int gLeftPin, int gRightPin)
+    {
+        redPin = rPin;
+        amberPin = ambPin;
+        greenFwdPin = gFwdPin;
+        greenLeftPin = gLeftPin;
+        greenRightPin = gRightPin;
+        pinMode(redPin, OUTPUT);
+        pinMode(amberPin, OUTPUT);
+        pinMode(greenFwdPin, OUTPUT);
+        pinMode(greenLeftPin, OUTPUT);
+        pinMode(greenRightPin, OUTPUT);
     }
 };
 
@@ -374,7 +388,7 @@ void initSlave()
     /* PRIMARY */
     Slave.primary.init_params_to_zero();
     Slave.primary.timer_Num = 0;
-    Slave.primary.set_GPIO(PRIMARY_RED,
+    Slave.primary.set_GPIO_Pins(PRIMARY_RED,
                            PRIMARY_AMBER,
                            PRIMARY_GREEN_FWD,
                            PRIMARY_GREEN_LEFT,
@@ -383,7 +397,7 @@ void initSlave()
     /* SECONDARY */
     Slave.secondary.init_params_to_zero();
     Slave.secondary.timer_Num = 1;
-    Slave.secondary.set_GPIO(SECONDARY_RED,
+    Slave.secondary.set_GPIO_Pins(SECONDARY_RED,
                              SECONDARY_AMBER,
                              SECONDARY_GREEN_FWD,
                              SECONDARY_GREEN_LEFT,
@@ -392,7 +406,7 @@ void initSlave()
     /* Overhead -- this is because overhead is basically the as primary */
     Slave.overhead.init_params_to_zero();
     Slave.overhead.timer_Num = 0;
-    Slave.overhead.set_GPIO(OVERHEAD_RED,
+    Slave.overhead.set_GPIO_Pins(OVERHEAD_RED,
                             OVERHEAD_AMBER,
                             OVERHEAD_GREEN_FWD,
                             OVERHEAD_GREEN_LEFT,
@@ -401,7 +415,7 @@ void initSlave()
     /* SPARE */
     Slave.spare.init_params_to_zero();
     Slave.spare.timer_Num = 2;
-    Slave.spare.set_GPIO(SPARE_RED,
+    Slave.spare.set_GPIO_Pins(SPARE_RED,
                          SPARE_AMBER,
                          SPARE_GREEN_FWD,
                          SPARE_GREEN_LEFT,
@@ -462,14 +476,14 @@ void initLamp()
     Slave.secondary.commanded_state = SlaveState::OFF;
     Slave.spare.commanded_state = SlaveState::OFF;
 
-    Slave.primary.moveToState();
-    Slave.secondary.moveToState();
+    Slave.primary.moveToState(true, -1, Traffic.mode);
+    Slave.secondary.moveToState(true, -1, Traffic.mode);
 }
 
 void signals_fsm_update()
 {
-    Slave.primary.lampFsmUpdate();
-    Slave.secondary.lampFsmUpdate();
+    Slave.primary.lampFsmUpdate(Traffic.mode);
+    Slave.secondary.lampFsmUpdate(Traffic.mode);
 }
 
 int getPrimaryState()

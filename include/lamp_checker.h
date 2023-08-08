@@ -5,7 +5,20 @@ This api:
 - code to perform lamp-by-lamp check (maybe on startup) to see if any lamp is not working
 */
 
-#include "configurations.h"
+#include "signals.h"
+
+enum Current_Sense_Input {
+    ISENSE_PRIMARY = 33,
+    ISENSE_SECONDARY = 32,
+    ISENSE_OVERHEAD = 35,
+    ISENSE_SPARE = 34
+};
+
+enum Current_Sense_Sel {
+    SEL0 = 1,
+    SEL1 = 22,
+    SEL2 = 23
+};
 
 /*
 Sets the MUX selector pins as output and sets up analog read

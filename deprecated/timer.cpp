@@ -1,3 +1,5 @@
+#if 0
+
 #include "configurations.h"
 #include "delay.h"
 
@@ -21,3 +23,5 @@ int timer_get_time(int state_id){
 int timer_get_time_elapsed(){
     return delay_get(0);
 }
+
+#endif

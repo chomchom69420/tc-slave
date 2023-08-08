@@ -1,6 +1,5 @@
 #include "control.h"
-#include "configurations.h"
-#include "mqtt.h"
+#include "control_mqtt.h"
 
 //Set Control mode to Auto by default
 static volatile int controlMode = ControlMode::AUTO; 
@@ -15,8 +14,8 @@ void setControlMode(JsonObject &parsed)
     if(parsed["panel_id"]!=PANEL_ID)
     {
         //Invalid panel, ignore
-        String msg="Invalid panel ID";
-        mqtt_log(msg);
+        char msg[]="Invalid panel ID";
+        log("/status/logs", msg);
         return;
     }
     
@@ -32,8 +31,8 @@ void setControlMode(JsonObject &parsed)
     else
     {
         //Invalid control mode, log to MQTT aand return
-        String msg = "Invalid control mode";
-        mqtt_log(msg);
+        char msg[] = "Invalid control mode";
+        log("/status/logs", msg);
     }
 }
 

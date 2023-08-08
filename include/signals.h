@@ -1,6 +1,6 @@
 //This is the header file to the .cpp file containing the internal FSM of the LED
-#include "ArduinoJson.h"
-#include "configurations.h"
+#include "control.h"
+#include "delay.h"
 
 /*
 initSlave() function is used to initialize the slave struct 
@@ -28,41 +28,6 @@ Initializes all lamps by putting them in OFF state
 void initLamp();
 
 /*
-Takes a JsonObject and sets the environment
-Reads mode and n_slaves from the JsonObject
-This needs to be called before setSlave()
-*/
-void setEnvironment(ArduinoJson::JsonObject &parsed);
-
-/*
-Takes a JsonObject and sets the slave instance
-Sets the opposite slave ID
-Sets the commanded states for primary and secondary
-Sets the timer values for primary and secondary
-Format:
-{
-    "n":    ,
-    "mode": ,
-    "slaves": {
-        "1" : {
-            "state":    ,
-            "red":      ,
-            "amber":    ,
-            "green":    
-        },
-        "2" : {
-            "state":    ,
-            "red":      ,
-            "amber":    ,
-            "green":    
-        },
-        ...
-    }
-}
-*/
-void setSlave(ArduinoJson::JsonObject &parsed);
-
-/*
 Updates the FSM for both the primary lamp and the secondary lamp
 */
 void signals_fsm_update();
@@ -74,51 +39,10 @@ Moves the current state into the commanded state
 void moveToState();
 
 /*
-Returns the state of the primary lamp
-*/
-int getPrimaryState();
-
-/*
-Returns the state of the secondary lamp
-*/
-int getSecondaryState();
-
-/*
-Returns the state of the overhead lamp
-*/
-int getOverheadState();
-
-/*
-Returns the state of the spare lamp
-*/
-int getSpareState();
-
-/*
 Returns the state of the specific lamp in the lamp group
 */
 bool signals_get_lamp_status(LampID id, Lamp_Channel channel);
 
-/*
-Returns the timer number of the specific lamp with lampID in LampID enum
-*/
-int getTimerNum(int lampID);
-
-/*
-Returns the elapsed time for the specific lamp
-*/
-unsigned int getElapsedTime(int lampID);
-
-/*
-Returns the red, green, amber timer values
-lampID in LampID
-colour in LampState
-*/
-int getTimerValues(int lampID, int colourID);
-
-/*
-Returns the remaining time for the specific lamp
-*/
-unsigned int getRemainingTime(int lampID);
 
 /*
 Return the mode from the environment struct instance 
@@ -214,7 +138,7 @@ JSON format for lamp configuration:
 
 bool get_lamp_enable(LampID id, Lamp_Channel channel);
 
-void signals_config_lamps(JsonObject& parsed);
+// void signals_config_lamps(JsonObject& parsed);
 
 lamp_config signals_get_lamp_config(LampID id);
 

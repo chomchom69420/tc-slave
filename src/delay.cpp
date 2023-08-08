@@ -1,5 +1,4 @@
 #include "delay.h"
-#include "Arduino.h"
 
 /*
 * We are using 4 software timers for the 4 lamps - primary, secondary, overhead, spare

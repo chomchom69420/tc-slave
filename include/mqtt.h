@@ -1,4 +1,6 @@
 #include <PubSubClient.h>
+#include <WiFi.h>
+#include <ArduinoJson.h>
 #include "configurations.h"
 
 #define SLAVE_UPDATES_TOPIC "/traffic/slave_feedback"
