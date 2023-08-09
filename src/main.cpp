@@ -18,9 +18,9 @@ void setup()
     mqtt_reconnect();
 
     //Initialize
-    initSlave();
-    initEnvironment();
-    initLamp();
+    signals_init_slave();
+    signals_init_environment();
+    signals_init_lamp();
     delay_init();
 
     last_time = millis();

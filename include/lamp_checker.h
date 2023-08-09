@@ -50,7 +50,7 @@ Return values:
 1 --> lamp is on (current > thresh_current)
 
 */
-bool get_lamp_status(LampID id, Lamp_Channel colour_channel);
+bool lamp_checker_get_lamp_status(LampID id, Lamp_Channel colour_channel);
 
 /*
 Logs the lamp status in an mqtt message
@@ -88,7 +88,7 @@ JSON payload format:
     }
 }
 */
-void log_lamp_status();
+void lamp_checker_log_lamp_status();
 
 /*
 Checks the lamp states against the desired states and logs the results in an MQTT message
@@ -139,24 +139,24 @@ This means that the actual state is not the same as the desired state. ON / OFF 
 2 → overcurrent
 This means that the current is greater than the overcurrent limit
 */
-int health_code(LampID id, Lamp_Channel colour_channel);
+// int health_code(LampID id, Lamp_Channel colour_channel);
 
 /*
 Sets the threshold current for declaring the lamp to be ON
 */
-void set_thresh_current(float i);
+void lamp_checker_set_thresh_current(float i);
 
 /*
 Returns the threshold current for declaring the lamp to be ON
 */
-float get_thresh_current();
+float lamp_checker_get_thresh_current();
 
 /*
 Sets the overcurrent limit for declaring the lamp
 */
-void set_overcurrent_limit(float i);
+void lamp_checker_set_overcurrent_limit(float i);
 
 /*
 Returns the overcurrent limit for declaring the lamp
 */
-float get_overcurrent_limit();
+float lamp_checker_get_overcurrent_limit();

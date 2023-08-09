@@ -40,7 +40,7 @@ public:
 public:
     /*PUBLIC METHODS*/
 
-    void moveToState(bool cmd_state_stored, int cmd_state, int mode)
+    void signals_move_to_state(bool cmd_state_stored, int cmd_state, int mode)
     {
         if (!cmd_state_stored)
         {
@@ -179,15 +179,15 @@ public:
         {
         case SlaveState::OFF:
             if (commanded_state != SlaveState::OFF)
-                moveToState(true, -1, mode);
+                signals_move_to_state(true, -1, mode);
             break;
 
         case SlaveState::AUTO_RED:
             if (control == ControlMode::DICTATED)
-                moveToState(false, SlaveState::DICTATED_RED, mode);
+                signals_move_to_state(false, SlaveState::DICTATED_RED, mode);
 
             if (commanded_state == SlaveState::BLINKER)
-                moveToState(true, -1, mode);
+                signals_move_to_state(true, -1, mode);
 
             if (delay_is_done(timer_Num))
             {
@@ -199,10 +199,10 @@ public:
 
         case SlaveState::AUTO_AMBER:
             if (control == ControlMode::DICTATED)
-                moveToState(false, SlaveState::DICTATED_AMBER, mode);
+                signals_move_to_state(false, SlaveState::DICTATED_AMBER, mode);
 
             if (commanded_state == SlaveState::BLINKER)
-                moveToState(true, -1, mode);
+                signals_move_to_state(true, -1, mode);
 
             if (delay_is_done(timer_Num))
             {
@@ -214,10 +214,10 @@ public:
 
         case SlaveState::AUTO_GREEN:
             if (control == ControlMode::DICTATED)
-                moveToState(false, SlaveState::DICTATED_GREEN, mode);
+                signals_move_to_state(false, SlaveState::DICTATED_GREEN, mode);
 
             if (commanded_state == SlaveState::BLINKER)
-                moveToState(true, -1, mode);
+                signals_move_to_state(true, -1, mode);
 
             if (delay_is_done(timer_Num))
             {
@@ -229,46 +229,46 @@ public:
 
         case SlaveState::DICTATED_RED:
             if (control == ControlMode::AUTO)
-                moveToState(false, SlaveState::AUTO_RED, mode);
+                signals_move_to_state(false, SlaveState::AUTO_RED, mode);
 
             if (commanded_state == SlaveState::DICTATED_AMBER)
-                moveToState(true, -1, mode);
+                signals_move_to_state(true, -1, mode);
 
             else if (commanded_state == SlaveState::DICTATED_GREEN)
-                moveToState(true, -1, mode);
+                signals_move_to_state(true, -1, mode);
 
             else if (commanded_state == SlaveState::BLINKER)
-                moveToState(true, -1, mode);
+                signals_move_to_state(true, -1, mode);
 
             break;
 
         case SlaveState::DICTATED_AMBER:
             if (control == ControlMode::AUTO)
-                moveToState(false, SlaveState::AUTO_AMBER,mode);
+                signals_move_to_state(false, SlaveState::AUTO_AMBER,mode);
 
             if (commanded_state == SlaveState::DICTATED_RED)
-                moveToState(true, -1, mode);
+                signals_move_to_state(true, -1, mode);
 
             else if (commanded_state == SlaveState::DICTATED_GREEN)
-                moveToState(true, -1, mode);
+                signals_move_to_state(true, -1, mode);
 
             else if (commanded_state == SlaveState::BLINKER)
-                moveToState(true, -1, mode);
+                signals_move_to_state(true, -1, mode);
 
             break;
 
         case SlaveState::DICTATED_GREEN:
             if (control == ControlMode::AUTO)
-                moveToState(false, SlaveState::AUTO_GREEN, mode);
+                signals_move_to_state(false, SlaveState::AUTO_GREEN, mode);
 
             if (commanded_state == SlaveState::DICTATED_AMBER, mode)
-                moveToState(true, -1, mode);
+                signals_move_to_state(true, -1, mode);
 
             else if (commanded_state == SlaveState::DICTATED_RED, mode)
-                moveToState(true, -1, mode);
+                signals_move_to_state(true, -1, mode);
 
             else if (commanded_state == SlaveState::BLINKER)
-                moveToState(true, -1, mode);
+                signals_move_to_state(true, -1, mode);
 
             break;
 
@@ -276,7 +276,7 @@ public:
             // It will loop forever until it has been asked to go to DICTATED_RED (this is basically the red extension part)
 
             if (commanded_state == SlaveState::DICTATED_RED)
-                moveToState(true, -1, mode);
+                signals_move_to_state(true, -1, mode);
 
             break;
 
@@ -356,10 +356,24 @@ struct environmentStruct
     int mode;
 } Traffic;
 
-/* STATIC METHOD DEFINITONS */
-static void setOppositeSlaveID();
+/* STATIC METHODS */
+static void setOppositeSlaveID()
+{
+    // if n = even, opp = self + n/2
+    if (Traffic.n_slaves % 2 == 0)
+        Slave.oppSlaveId = Slave.slaveId + Traffic.n_slaves / 2;
 
-void initEnvironment()
+    // if n=odd, opp = self + floor(n/2) unless self = 1 ==> then single no opp
+    else
+    {
+        if (Slave.slaveId == 1)
+            Slave.oppSlaveId = -1; // no opposite slave
+        else
+            Slave.oppSlaveId = Slave.slaveId + (int)Traffic.n_slaves / 2;
+    }
+}
+
+void signals_init_environment()
 {
     // Set n_slaves to at least 1 (itself)
     Traffic.n_slaves = 1;
@@ -373,7 +387,7 @@ void setEnvironment(JsonObject &parsed)
     Traffic.mode = parsed["mode"];
 }
 
-void initSlave()
+void signals_init_slave()
 {
     // This function is used to initialize the struct Slave
     Slave.slaveId = SLAVE_ID;
@@ -416,22 +430,6 @@ void initSlave()
                          SPARE_GREEN_RIGHT);
 }
 
-static void setOppositeSlaveID()
-{
-    // if n = even, opp = self + n/2
-    if (Traffic.n_slaves % 2 == 0)
-        Slave.oppSlaveId = Slave.slaveId + Traffic.n_slaves / 2;
-
-    // if n=odd, opp = self + floor(n/2) unless self = 1 ==> then single no opp
-    else
-    {
-        if (Slave.slaveId == 1)
-            Slave.oppSlaveId = -1; // no opposite slave
-        else
-            Slave.oppSlaveId = Slave.slaveId + (int)Traffic.n_slaves / 2;
-    }
-}
-
 void setSlave(JsonObject &parsed)
 {
     setOppositeSlaveID();
@@ -463,15 +461,15 @@ void setSlave(JsonObject &parsed)
     }
 }
 
-void initLamp()
+void signals_init_lamp()
 {
     // Start every signal in OFF state
     Slave.primary.commanded_state = SlaveState::OFF;
     Slave.secondary.commanded_state = SlaveState::OFF;
     Slave.spare.commanded_state = SlaveState::OFF;
 
-    Slave.primary.moveToState(true, -1, Traffic.mode);
-    Slave.secondary.moveToState(true, -1, Traffic.mode);
+    Slave.primary.signals_move_to_state(true, -1, Traffic.mode);
+    Slave.secondary.signals_move_to_state(true, -1, Traffic.mode);
 }
 
 void signals_fsm_update()
@@ -590,27 +588,27 @@ unsigned int getRemainingTime(int lampID)
     }
 }
 
-int getMode()
+int signals_get_mode()
 {
     return Traffic.mode;
 }
 
-int getTotalSlaves()
+int signals_get_total_slaves()
 {
     return Traffic.n_slaves;
 }
 
-void addSlave()
+void signals_add_slave()
 {
     Traffic.n_slaves++;
 }
 
-void dropSlave()
+void signals_drop_slave()
 {
     Traffic.n_slaves--;
 }
 
-void setTotalSlaves(int n)
+void signals_set_total_slaves(int n)
 {
     Traffic.n_slaves = n;
 }

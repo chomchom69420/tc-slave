@@ -3,7 +3,7 @@
 #include "delay.h"
 
 /*
-initSlave() function is used to initialize the slave struct 
+signals_init_slave() function is used to initialize the slave struct 
 It sets the slave id, opposite slave id, panel id
 Initializes all timers to 0
 Initializers timer numbers
@@ -14,18 +14,18 @@ Sets the lamp pins according to defs in configurations.h
 
 This function should be exectued in void setup()
 */
-void initSlave();
+void signals_init_slave();
 
 /*
 Initializes mode to MODE_MULTIDIRECTION and number of slaves to 1
 This function should be exectued in void setup()
 */
-void initEnvironment();
+void signals_init_environment();
 
 /*
 Initializes all lamps by putting them in OFF state
 */
-void initLamp();
+void signals_init_lamp();
 
 /*
 Updates the FSM for both the primary lamp and the secondary lamp
@@ -36,7 +36,7 @@ void signals_fsm_update();
 Executes the commanded state
 Moves the current state into the commanded state
 */
-void moveToState();
+void signals_move_to_state();
 
 /*
 Returns the state of the specific lamp in the lamp group
@@ -47,28 +47,28 @@ bool signals_get_lamp_status(LampID id, Lamp_Channel channel);
 /*
 Return the mode from the environment struct instance 
 */
-int getMode();
+int signals_get_mode();
 
 /*
 Returns the total number of slaves connected
 */
-int getTotalSlaves();
+int signals_get_total_slaves();
 
 /*
 Sets the total number of slaves
 */
-void setTotalSlaves(int n);
+void signals_set_total_slaves(int n);
 /*
 Adds a slave to the current number of slaves
 Usually used when a slave is added to the network
 */
-void addSlave();
+void signals_add_slave();
 
 /*
 Drops a slave from the current total number of slaves
 Usually used when a slave drops from the network
 */
-void dropSlave();
+void signals_drop_slave();
 
 
                                     /* LAMP CONFIG SECTION  */
