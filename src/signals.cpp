@@ -801,3 +801,12 @@ int signals_get_primary_remaining_time()
 {
     return Slave.primary.time_left;
 }
+
+int signals_get_secondary_remaining_time() {
+    return Slave.secondary.time_left;
+}
+
+//This implementation is only for timer.cpp
+int signals_get_secondary_time_remaining() {
+    return Slave.secondary.time_left;
+}

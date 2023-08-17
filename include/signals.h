@@ -55,9 +55,10 @@ Returns the total number of slaves connected
 int signals_get_total_slaves();
 
 /*
-Returns the remaining time of the primary lamp
+Return the total time remaining for secondary
 */
-int signals_get_primary_remaining_time();
+int signals_get_secondary_time_remaining();
+
 /*
 Sets the total number of slaves
 */

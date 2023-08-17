@@ -77,3 +77,14 @@ int getOverheadState();
 Returns the state of the spare lamp
 */
 int getSpareState();
+
+
+/*
+Returns the remaining time of the primary lamp
+*/
+int signals_get_primary_remaining_time();
+
+/*
+Returns the remaining time of the secondary lamp
+*/
+int signals_get_secondary_remaining_time();

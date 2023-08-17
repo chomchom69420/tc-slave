@@ -66,7 +66,7 @@ void timer_hardware_init()
 
 void timer_update()
 {
-    int time = signals_get_primary_remaining_time();
+    int time = signals_get_secondary_time_remaining();
     Wire.beginTransmission(d0_addr);
     Wire.write(GPIO);
     Wire.write(digit_map[time % 10]);
