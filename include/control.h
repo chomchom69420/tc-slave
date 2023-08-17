@@ -17,4 +17,6 @@ int getControlMode();
 Manually sets a control mode
 This overloaded setControlMode() function will be used to toggle control mode with master coming Online / going Offline
 */
-void setControlMode(ControlMode mode);
+void setControlModeEnum(ControlMode mode);
+
+void setControlMode(JsonObject &parsed);

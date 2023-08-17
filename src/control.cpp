@@ -37,7 +37,7 @@ void setControlMode(JsonObject &parsed)
     }
 }
 
-void setControlMode(ControlMode mode)
+void setControlModeEnum(ControlMode mode)
 {
     controlMode = mode;
 }

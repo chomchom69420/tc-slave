@@ -104,7 +104,7 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length)
   Serial.print(topic);
   Serial.print("\n");
 
-  String master_topic = "/status/master";
+  String status_topic = "/traffic/status";
   String control_topic = "/traffic/control";
   String config_topic = "/traffic/config";
 
@@ -112,28 +112,26 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length)
   {
     parse_mqtt_signal_commands(payload);
   }
-  else if (strcmp(topic, master_topic.c_str()) == 0)
+  else if (strcmp(topic, status_topic.c_str()) == 0)
   {
-    const int capacity = JSON_OBJECT_SIZE(5);
+    const int capacity = JSON_OBJECT_SIZE(2);
     StaticJsonBuffer<capacity> jb;
     JsonObject &parsed = jb.parseObject(payload);
 
-    String master_status = parsed["status"];
-    String offline = "Offline";
-    String online = "Online";
+    String species = parsed["species"];
 
     /*Master offline*/
-    if (strcmp(master_status.c_str(), offline.c_str()) == 0)
+    if (species == "offline")
     {
       master_online = 0;
-      setControlMode(parsed);
+      setControlModeEnum(ControlMode::AUTO);
     }
 
-    /*Master offline*/
-    else if (strcmp(master_status.c_str(), online.c_str()) == 0)
+    /*Master online*/
+    else if (species == "online")
     {
       master_online = 1;
-      setControlMode(parsed);
+      setControlModeEnum(ControlMode::DICTATED);
     }
   }
 
@@ -198,7 +196,7 @@ void mqtt_publish_state()
 
   // Serializing into payload
   obj.printTo(payload);
-  mqttClient.publish(SLAVE_UPDATES_TOPIC, payload);
+  mqttClient.publish("/traffic/slave_feedback", payload);
 }
 
 bool mqtt_pubsubloop()
