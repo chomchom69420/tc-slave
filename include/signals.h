@@ -55,6 +55,10 @@ Returns the total number of slaves connected
 int signals_get_total_slaves();
 
 /*
+Returns the remaining time of the primary lamp
+*/
+int signals_get_primary_remaining_time();
+/*
 Sets the total number of slaves
 */
 void signals_set_total_slaves(int n);
@@ -79,6 +83,7 @@ If all the lamps are disabled, then the set of lamps (primary/secondary/overhead
 This is just to store the intended configuration of the lamps in the slave
 The actual checking of whether a lamp is connected / not connected is performed in the lamp_checker
 */
+
 
 typedef struct lamp_config
 {

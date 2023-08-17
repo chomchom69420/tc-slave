@@ -796,3 +796,8 @@ bool get_lamp_enable(LampID id, Lamp_Channel channel)
         break;
     }
 }
+
+int signals_get_primary_remaining_time()
+{
+    return Slave.primary.time_left;
+}

@@ -45,7 +45,7 @@ static int health_code(LampID id, Lamp_Channel channel)
     else if (id == LampID::SPARE)
         pin = Current_Sense_Input::ISENSE_SPARE;
 
-    if (get_current(pin, channel) > i_overcurrent_lim)
+    if (get_current(pin, channel) >= i_overcurrent_lim)
         return 2;
 
     if (get_lamp_enable(id, channel))
